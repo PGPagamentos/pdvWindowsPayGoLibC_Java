@@ -1,0 +1,13 @@
+br/com/paygo/enums/PWData.class
+br/com/paygo/enums/PWUserDataMessage.class
+br/com/paygo/enums/PWPaymentMethod.class
+br/com/paygo/App.class
+br/com/paygo/PGWebLibMap.class
+br/com/paygo/enums/PWRet.class
+br/com/paygo/enums/PWOper.class
+br/com/paygo/PGWebLib.class
+br/com/paygo/enums/PWCardType.class
+br/com/paygo/enums/PWCnf.class
+br/com/paygo/enums/PWPINPadEvent.class
+br/com/paygo/enums/PWPINPadInputEvent.class
+br/com/paygo/enums/PWInfo.class
