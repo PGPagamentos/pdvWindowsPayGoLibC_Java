@@ -1,12 +1,12 @@
 HELP.md
-target/
+/target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**
 !**/src/test/**
 
 ### Application stuff ###
-Data
-Log
+/Data/
+/Log/
 
 ### STS ###
 .apt_generated
@@ -18,7 +18,7 @@ Log
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+/.idea/
 *.iws
 *.iml
 *.ipr
@@ -29,7 +29,8 @@ Log
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
+/build/
 
 ### VS Code ###
-.vscode/
+/.vscode/
+
