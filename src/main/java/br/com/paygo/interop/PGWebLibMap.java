@@ -1,6 +1,5 @@
-package br.com.paygo;
+package br.com.paygo.interop;
 
-import br.com.paygo.model.PWGetData;
 import com.sun.jna.Library;
 import com.sun.jna.ptr.ShortByReference;
 

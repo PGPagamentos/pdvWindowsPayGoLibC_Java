@@ -1,4 +1,4 @@
-package br.com.paygo.model;
+package br.com.paygo.interop;
 
 import com.sun.jna.Structure;
 

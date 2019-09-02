@@ -2,6 +2,7 @@ package br.com.paygo;
 
 import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWOper;
+import br.com.paygo.interop.PGWebLib;
 
 public class App
 {

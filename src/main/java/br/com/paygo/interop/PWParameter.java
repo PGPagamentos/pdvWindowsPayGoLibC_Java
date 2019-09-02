@@ -1,4 +1,4 @@
-package br.com.paygo.model;
+package br.com.paygo.interop;
 
 public class PWParameter {
 
