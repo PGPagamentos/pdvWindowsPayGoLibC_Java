@@ -1,5 +1,7 @@
 package br.com.paygo.enums;
 
+import java.util.Arrays;
+
 /**
  * Códigos de Erro de Retorno da Biblioteca
  */
@@ -60,5 +62,9 @@ public enum PWRet {
 
     public short getValue() {
         return value;
+    }
+
+    public static PWRet valueOf(short value) throws Exception {
+        return Arrays.stream(values()).filter(pwRet -> pwRet.value == value).findFirst().orElseThrow(Exception::new);
     }
 }

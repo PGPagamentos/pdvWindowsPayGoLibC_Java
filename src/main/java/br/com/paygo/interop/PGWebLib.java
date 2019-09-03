@@ -2,7 +2,6 @@ package br.com.paygo.interop;
 
 import br.com.paygo.enums.PWCnf;
 import br.com.paygo.enums.PWInfo;
-import br.com.paygo.enums.PWOper;
 import br.com.paygo.enums.PWUserDataMessage;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
@@ -11,36 +10,29 @@ import com.sun.jna.ptr.ShortByReference;
 public class PGWebLib {
 
     private static final String libName = Platform.isLinux() ? "PGWebLib.so" : "PGWebLib.dll";
-    private final ShortByReference numParams = new ShortByReference((short)10);
-    private final PGWebLibMap libInterface;
-    private PWGetData[] getData;
-    private PWParameter[] pwParameters;
+    private PGWebLibMap libInterface;
 
     static {
         System.setProperty("jna.debug_load", "true");
         System.setProperty("jna.debug_load.jna", "true");
-        System.setProperty("jna.platform.library.path", "/usr/local");
+        System.setProperty("jna.platform.library.path", "/tmp");
     }
 
     public PGWebLib() {
+        Native.setProtected(true);
         this.libInterface = Native.load(libName, PGWebLibMap.class);
-        getData = (PWGetData[]) new PWGetData().toArray(numParams.getValue());
     }
 
     public short init(String path) {
         return libInterface.PW_iInit(path);
     }
 
-    public short newTransaction(PWOper operation) {
-        return libInterface.PW_iNewTransac(operation.getValue());
+    public short newTransaction(int operation) {
+        return libInterface.PW_iNewTransac(operation);
     }
 
-    public short addParam(PWInfo param, String paramValue) {
-        return libInterface.PW_iAddParam(param.getValue(), paramValue);
-    }
-
-    public short executeTransaction() {
-        return libInterface.PW_iExecTransac(getData, numParams);
+    public short addParam(int param, String paramValue) {
+        return libInterface.PW_iAddParam(param, paramValue);
     }
 
     public short getResult(PWInfo param) {
@@ -49,8 +41,12 @@ public class PGWebLib {
         return libInterface.PW_iGetResult(param.getValue(), paramValue, paramValue.length);
     }
 
+    public short executeTransaction(PWGetData[] getData, ShortByReference numParams) {
+        return libInterface.PW_iExecTransac(getData, numParams);
+    }
+
     public short confirmTransaction(PWCnf transactionResult, String transactionLocalRef, String transactionPGWRef,
-                             String transactionProviderRef, String storeId, String providerName) {
+                                    String transactionProviderRef, String storeId, String providerName) {
 
         return libInterface.PW_iConfirmation(transactionResult.getValue(), transactionLocalRef, transactionPGWRef,
                 transactionProviderRef, storeId, providerName);

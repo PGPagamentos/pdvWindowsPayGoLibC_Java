@@ -2,7 +2,10 @@ package br.com.paygo.interop;
 
 import com.sun.jna.Structure;
 
-class PWMenu extends Structure implements Structure.ByReference {
+import java.util.Arrays;
+import java.util.List;
+
+public class PWMenu extends Structure {
     
     public byte[] text1 = new byte[41];
     public byte[] text2 = new byte[41];
@@ -86,4 +89,16 @@ class PWMenu extends Structure implements Structure.ByReference {
     public byte[] value40 = new byte[256];
 
     public PWMenu() {}
+
+    @Override
+    protected List<String> getFieldOrder() {
+        return Arrays.asList("text1", "text2", "text3", "text4", "text5", "text6", "text7", "text8", "text9", "text10",
+                "text11", "text12", "text13", "text14", "text15", "text16", "text17", "text18", "text19", "text20",
+                "text21", "text22", "text23", "text24", "text25", "text26", "text27", "text28", "text29", "text30",
+                "text31", "text32", "text33", "text34", "text35", "text36", "text37", "text38", "text39", "text40",
+                "value1", "value2", "value3", "value4", "value5", "value6", "value7", "value8", "value9", "value10",
+                "value11", "value12", "value13", "value14", "value15", "value16", "value17", "value18", "value19", "value20",
+                "value21", "value22", "value23", "value24", "value25", "value26", "value27", "value28", "value29", "value30",
+                "value31", "value32", "value33", "value34", "value35", "value36", "value37", "value38", "value39", "value40");
+    }
 }

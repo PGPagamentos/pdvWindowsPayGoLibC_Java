@@ -1,5 +1,7 @@
 package br.com.paygo.enums;
 
+import java.util.Arrays;
+
 /**
  * Tipos de dados que podem ser informados pela Automação
  */
@@ -97,5 +99,9 @@ public enum PWInfo {
 
     public int getValue() {
         return value;
+    }
+
+    public static PWInfo valueOf(short value) throws Exception {
+        return Arrays.stream(values()).filter(pwInfo -> pwInfo.value == value).findFirst().orElseThrow(Exception::new);
     }
 }

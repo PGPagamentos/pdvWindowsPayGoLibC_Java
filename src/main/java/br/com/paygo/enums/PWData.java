@@ -1,5 +1,7 @@
 package br.com.paygo.enums;
 
+import java.util.Arrays;
+
 /**
  * Códigos de Informações que podem ser solicitadas
  */
@@ -26,5 +28,9 @@ public enum PWData {
 
     public int getValue() {
         return value;
+    }
+
+    public static PWData valueOf(int value) throws Exception {
+        return Arrays.stream(values()).filter(pwData -> pwData.value == value).findFirst().orElseThrow(Exception::new);
     }
 }
