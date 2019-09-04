@@ -1,5 +1,7 @@
 package br.com.paygo.enums;
 
+import br.com.paygo.exception.InvalidReturnTypeException;
+
 import java.util.Arrays;
 
 /**
@@ -64,7 +66,7 @@ public enum PWRet {
         return value;
     }
 
-    public static PWRet valueOf(short value) throws Exception {
-        return Arrays.stream(values()).filter(pwRet -> pwRet.value == value).findFirst().orElseThrow(Exception::new);
+    public static PWRet valueOf(short value) throws InvalidReturnTypeException {
+        return Arrays.stream(values()).filter(pwRet -> pwRet.value == value).findFirst().orElseThrow(() -> new InvalidReturnTypeException("O valor retornado (" + value + ") não foi mapeado."));
     }
 }

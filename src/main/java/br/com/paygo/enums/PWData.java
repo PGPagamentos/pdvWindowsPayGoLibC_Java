@@ -1,5 +1,7 @@
 package br.com.paygo.enums;
 
+import br.com.paygo.exception.InvalidDataType;
+
 import java.util.Arrays;
 
 /**
@@ -30,7 +32,7 @@ public enum PWData {
         return value;
     }
 
-    public static PWData valueOf(int value) throws Exception {
-        return Arrays.stream(values()).filter(pwData -> pwData.value == value).findFirst().orElseThrow(Exception::new);
+    public static PWData valueOf(int value) throws InvalidDataType {
+        return Arrays.stream(values()).filter(pwData -> pwData.value == value).findFirst().orElseThrow(() -> new InvalidDataType("Tipo de dado solicitado pela biblioteca PGWebLib não mapeado (" + value + ")."));
     }
 }

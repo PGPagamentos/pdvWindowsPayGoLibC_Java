@@ -3,28 +3,41 @@ package br.com.paygo.interop;
 import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWOper;
 import br.com.paygo.enums.PWRet;
+import br.com.paygo.exception.InvalidReturnTypeException;
 import com.sun.jna.ptr.ShortByReference;
 
 public class LibFunctions {
     static private PGWebLib pgWebLib = new PGWebLib();
 
-    public static PWRet init(String path) throws Exception {
+    public static PWRet init(String path) throws InvalidReturnTypeException {
         return PWRet.valueOf(pgWebLib.init(path));
     }
 
-    public static PWRet newTransaction(PWOper operation) throws Exception {
+    static PWRet newTransaction(PWOper operation) throws InvalidReturnTypeException {
         return PWRet.valueOf(pgWebLib.newTransaction(operation.getValue()));
     }
 
-    public static PWRet addParam(PWInfo param, String paramValue) throws Exception {
+    static PWRet addParam(PWInfo param, String paramValue) throws InvalidReturnTypeException {
         return PWRet.valueOf(pgWebLib.addParam(param.getValue(), paramValue));
     }
 
-    public static PWRet getResult(PWInfo param) throws Exception {
+    static PWRet getResult(PWInfo param) throws InvalidReturnTypeException {
         return PWRet.valueOf(pgWebLib.getResult(param));
     }
 
-    public static PWRet executeTransaction(PWGetData[] getData, ShortByReference numParams) throws Exception {
+    static PWRet executeTransaction(PWGetData[] getData, ShortByReference numParams) throws InvalidReturnTypeException {
         return PWRet.valueOf(pgWebLib.executeTransaction(getData, numParams));
+    }
+
+    static PWRet removeCardFromPINPad() throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.PINPadRemoveCard());
+    }
+
+    static PWRet eventLoop(byte[] displayMessage) throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.PINPadEventLoop(displayMessage, displayMessage.length));
+    }
+
+    static PWRet abortTransaction() throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.PINPadAbort());
     }
 }

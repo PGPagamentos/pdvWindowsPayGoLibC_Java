@@ -21,17 +21,21 @@ public class App
             returnedCode = transaction.start();
             System.out.println("=> PW_iNewTransac: " + returnedCode.toString());
 
-            transaction.addMandatoryParams();
-
             do {
                 returnedCode = transaction.executeTransaction();
                 System.out.println("=> PW_iExecTransac: " + returnedCode);
+
+                transaction.showTransactionStatus();
 
                 if (returnedCode == PWRet.MOREDATA) {
                     transaction.retrieveMoreData();
                 }
 
             } while (returnedCode == PWRet.MOREDATA);
+
+            if (returnedCode == PWRet.OK) {
+                System.out.println("\n\n=> INSTALAÇÃO CONCLUÍDA <=");
+            }
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

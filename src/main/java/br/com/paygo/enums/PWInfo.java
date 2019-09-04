@@ -1,5 +1,7 @@
 package br.com.paygo.enums;
 
+import br.com.paygo.exception.InvalidInfoType;
+
 import java.util.Arrays;
 
 /**
@@ -89,7 +91,8 @@ public enum PWInfo {
     SERVERPND(32523),    // Indica se o ponto de captura possui alguma pendência a ser resolvida com o Pay&Go Web: 0: não possui pendência; 1: possui pendência
     PPINFO(0x7F15),    // Informações do PIN-pad conectado), seguindo o padrão posição/informação abaixo: 001-020 / Nome do fabricante do PIN-pad. 021-039 / Modelo/versão do hardware. 040 / Se o PIN-pad suporta cartão com chip sem contato), este campo deve conter a letra “C”), caso contrário um espaço em branco. 041-060 / Versão do software básico/firmware. 061-064 / Versão da especificação), no formato “V.VV”. 065-080 / Versão da aplicação básica), no formato “VVV.VV AAMMDD” (com 3 espaços à direita). 081-100 / Número de série do PIN-pad (com espaços à direita)
     DUEAMNT(0xBF06),   // Valor devido pelo usuário), considerando CURREXP), já deduzido em TOTAMNT
-    READJUSTEDAMNT(0xBF09); // Valor total da transação reajustado), este campo será utilizado caso o autorizador), por alguma regra de negócio específica dele), resolva alterar o valor total que foi solicitado para a transação
+    READJUSTEDAMNT(0xBF09), // Valor total da transação reajustado), este campo será utilizado caso o autorizador), por alguma regra de negócio específica dele), resolva alterar o valor total que foi solicitado para a transação
+    STATUS((short)0x6F);
 
     private final int value;
 
@@ -101,7 +104,7 @@ public enum PWInfo {
         return value;
     }
 
-    public static PWInfo valueOf(short value) throws Exception {
-        return Arrays.stream(values()).filter(pwInfo -> pwInfo.value == value).findFirst().orElseThrow(Exception::new);
+    public static PWInfo valueOf(short value) throws InvalidInfoType {
+        return Arrays.stream(values()).filter(pwInfo -> pwInfo.value == value).findFirst().orElseThrow(() -> new InvalidInfoType("Dado do tipo PWInfo não mapeado (" + value + ")."));
     }
 }
