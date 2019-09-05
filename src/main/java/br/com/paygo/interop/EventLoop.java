@@ -7,7 +7,6 @@ import br.com.paygo.helper.TextFormatter;
 class EventLoop {
 
     static PWRet execute(byte[] displayMessage) throws InvalidReturnTypeException {
-        String result;
         PWRet eventLoopResponse;
 
         do {
@@ -15,11 +14,8 @@ class EventLoop {
 
             if (eventLoopResponse == PWRet.DISPLAY) {
                 String message = TextFormatter.formatByteMessage(displayMessage);
-                System.out.println("Transaction Message: " + message + "\n");
+                System.out.println("\n\n\n\t" + message + "\n\n");
             }
-
-            result = eventLoopResponse == PWRet.NOTHING ? "." : "\n" + eventLoopResponse;
-            System.out.print(result);
 
             if(eventLoopResponse == PWRet.CANCEL) {
                 break;

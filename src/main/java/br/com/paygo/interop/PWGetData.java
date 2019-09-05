@@ -7,6 +7,9 @@ import br.com.paygo.exception.InvalidDataType;
 import br.com.paygo.exception.InvalidInfoType;
 import br.com.paygo.helper.TextFormatter;
 import com.sun.jna.Structure;
+
+import java.util.Arrays;
+
 @Structure.FieldOrder(value = {"identificador", "tipoDeDado", "prompt", "numOpcoesMenu", "menu", "mascaraDeCaptura",
         "tipoEntradaPermitido", "tamanhoMinimo", "tamanhoMaximo", "valorMinimo", "valorMaximo", "ocultarDadosDigitados",
         "validacaoDado", "aceitaNulo", "valorInicial", "teclaDeAtalho", "msgValidacao", "msgConfirmacao", "msgDadoMaior",
@@ -114,6 +117,33 @@ public class PWGetData extends Structure {
         return "PWGetData{" +
                 "identificador=" + identificador +
                 ", tipoDeDado=" + tipoDeDado +
+                ", prompt=" + Arrays.toString(prompt) +
+                ", numOpcoesMenu=" + numOpcoesMenu +
+                ", mascaraDeCaptura=" + Arrays.toString(mascaraDeCaptura) +
+                ", tipoEntradaPermitido=" + tipoEntradaPermitido +
+                ", tamanhoMinimo=" + tamanhoMinimo +
+                ", tamanhoMaximo=" + tamanhoMaximo +
+                ", valorMinimo=" + valorMinimo +
+                ", valorMaximo=" + valorMaximo +
+                ", ocultarDadosDigitados=" + ocultarDadosDigitados +
+                ", validacaoDado=" + validacaoDado +
+                ", aceitaNulo=" + aceitaNulo +
+                ", valorInicial=" + Arrays.toString(valorInicial) +
+                ", teclaDeAtalho=" + teclaDeAtalho +
+                ", msgValidacao=" + Arrays.toString(msgValidacao) +
+                ", msgConfirmacao=" + Arrays.toString(msgConfirmacao) +
+                ", msgDadoMaior=" + Arrays.toString(msgDadoMaior) +
+                ", msgDadoMenor=" + Arrays.toString(msgDadoMenor) +
+                ", capturarDataVencimentoCartao=" + capturarDataVencimentoCartao +
+                ", tipoEntradaCartao=" + tipoEntradaCartao +
+                ", itemInicial=" + itemInicial +
+                ", numeroCapturas=" + numeroCapturas +
+                ", msgPrevia=" + Arrays.toString(msgPrevia) +
+                ", tipoEntradaCodigoBarras=" + tipoEntradaCodigoBarras +
+                ", omitirMsgAlerta=" + omitirMsgAlerta +
+                ", iniciarPelaEsquerda=" + iniciarPelaEsquerda +
+                ", notificarCancelamento=" + notificarCancelamento +
+                ", alinharDireita=" + alinharDireita +
                 '}';
     }
 }

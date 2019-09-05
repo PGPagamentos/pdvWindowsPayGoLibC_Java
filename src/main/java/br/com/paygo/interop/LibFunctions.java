@@ -21,8 +21,8 @@ public class LibFunctions {
         return PWRet.valueOf(pgWebLib.addParam(param.getValue(), paramValue));
     }
 
-    static PWRet getResult(PWInfo param) throws InvalidReturnTypeException {
-        return PWRet.valueOf(pgWebLib.getResult(param));
+    static PWRet getResult(PWInfo param, byte[] paramValue) throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.getResult(param, paramValue));
     }
 
     static PWRet executeTransaction(PWGetData[] getData, ShortByReference numParams) throws InvalidReturnTypeException {
@@ -39,5 +39,17 @@ public class LibFunctions {
 
     static PWRet abortTransaction() throws InvalidReturnTypeException {
         return PWRet.valueOf(pgWebLib.PINPadAbort());
+    }
+
+    static PWRet getCardFromPINPad(short index) throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.PINPadGetCard(index));
+    }
+
+    static PWRet offlineCardProcessing(short index) throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.PINPadChipCardOfflineProcessing(index));
+    }
+
+    static PWRet finishOfflineProcessing(short index) throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.PINPadChipCardFinishOfflineProcessing(index));
     }
 }

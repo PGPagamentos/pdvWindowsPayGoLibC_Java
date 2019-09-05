@@ -35,9 +35,7 @@ public class PGWebLib {
         return libInterface.PW_iAddParam(param, paramValue);
     }
 
-    public short getResult(PWInfo param) {
-        byte[] paramValue = new byte[1000];
-
+    public short getResult(PWInfo param, byte[] paramValue) {
         return libInterface.PW_iGetResult(param.getValue(), paramValue, paramValue.length);
     }
 

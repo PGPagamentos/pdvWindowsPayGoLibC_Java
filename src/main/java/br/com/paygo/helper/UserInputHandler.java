@@ -1,10 +1,12 @@
 package br.com.paygo.helper;
 
 import br.com.paygo.enums.PWValidDataEntry;
+import br.com.paygo.interop.Menu;
 
+import java.util.Map;
 import java.util.Scanner;
 
-public class TypedDataHandler {
+public class UserInputHandler {
 
     public static String getTypedData(String promptMessage, byte maxSize, byte minSize, PWValidDataEntry validDataEntry, String initialValue) {
         boolean isValid;
@@ -17,6 +19,26 @@ public class TypedDataHandler {
         } while (!isValid);
 
         return typedData;
+    }
+
+    public static String requestSelectionFromMenu(Menu menu) {
+        Scanner scanner = new Scanner(System.in);
+        int userInput;
+        int menuIndex = 1;
+
+        Map<String, String> menuOptions = menu.build();
+
+        do {
+            for (Map.Entry entry: menuOptions.entrySet()) {
+                System.out.println("[" + menuIndex++ + "] " + entry.getValue() + " (" + entry.getKey() + ")");
+            }
+
+            System.out.println("SELECIONE UMA OPÇÃO:");
+            userInput = scanner.nextInt() - 1;
+
+        } while (userInput > menu.getSize() || userInput < 0);
+
+        return (String) menuOptions.keySet().toArray()[userInput];
     }
 
     private static String requestUserInput(String promptMessage) {

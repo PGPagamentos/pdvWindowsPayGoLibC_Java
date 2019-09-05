@@ -2,6 +2,7 @@ package br.com.paygo.interop;
 
 import com.sun.jna.Structure;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
@@ -89,6 +90,10 @@ public class PWMenu extends Structure {
     public byte[] value40 = new byte[256];
 
     public PWMenu() {}
+
+    public Field[] getDeclaredFields() {
+        return this.getClass().getDeclaredFields();
+    }
 
     @Override
     protected List<String> getFieldOrder() {
