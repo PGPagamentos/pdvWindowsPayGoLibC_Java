@@ -10,7 +10,7 @@ public interface PGWebLibMap extends Library {
     short PW_iAddParam(int param, String paramValue);
     short PW_iExecTransac(PWGetData[] pwGetData, ShortByReference numParams);
     short PW_iGetResult(int param, byte[] value, int valueSize);
-    short PW_iConfirmation(int transacResult, String transacLocalRef, String transacPGWRef,
+    short PW_iConfirmation(int confirmationType, String transacLocalRef, String transacPGWRef,
                            String transacProviderRef, String storeId, String providerName);
     short PW_iIdleProc();
     short PW_iGetOperations(); // VERIFICAR - não implementado nas outras aplicações

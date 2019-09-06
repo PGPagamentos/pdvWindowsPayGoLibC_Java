@@ -9,10 +9,10 @@ import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.helper.UserInputHandler;
 import com.sun.jna.ptr.ShortByReference;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.stream.Stream;
 
 public class Transaction {
 
@@ -42,10 +42,6 @@ public class Transaction {
         this.value = new byte[1000];
     }
 
-    public String getValue(boolean formatted) {
-        return formatted ? TextFormatter.formatByteMessage(this.value) : new String(this.value);
-    }
-
     public PWRet start() throws Exception {
         PWRet ret = LibFunctions.newTransaction(this.operation);
 
@@ -56,8 +52,7 @@ public class Transaction {
         return ret;
     }
 
-    public PWRet executeTransaction() throws InvalidReturnTypeException, InterruptedException {
-        Thread.sleep(500);
+    public PWRet executeTransaction() throws InvalidReturnTypeException {
         return LibFunctions.executeTransaction(getData, numParams);
     }
 
@@ -68,7 +63,7 @@ public class Transaction {
     public void retrieveMoreData() throws InvalidReturnTypeException {
         Scanner scan = new Scanner(System.in);
 
-        System.out.println("Param size: " + this.numParams.getValue());
+        System.out.println("\nParam size: " + this.numParams.getValue());
 
         for (short index = 0; index < this.numParams.getValue(); index++) {
             PWGetData pwGetData = this.getData[index];
@@ -128,12 +123,41 @@ public class Transaction {
                 "\nValue(STATUS): " + this.getValue(true));
     }
 
+    public PWRet finalizeTransaction() {
+        PWRet ret = PWRet.OK;
+
+        try {
+            this.value = new byte[1000];
+            getResult(PWInfo.CNFREQ);
+            System.out.println("Transação deve ser confirmada: " + new String(this.value));
+
+            if (new String(this.value).trim().equals("1")) {
+                HashMap<PWInfo, String> confirmationParams = this.getConfirmationParams();
+
+                Confirmation confirmation = new Confirmation(this, confirmationParams);
+
+                ret = confirmation.executeConfirmationProcess(false);
+                System.out.println("=> PW_iConfirmation: " + ret);
+            }
+        } catch (InvalidReturnTypeException e) {
+            System.out.println("Erro ao confirmar a transação!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return ret;
+    }
+
+    public String getValue(boolean formatted) {
+        return formatted ? TextFormatter.formatByteMessage(this.value) : new String(this.value);
+    }
+
     private void executeEventLoop() throws InvalidReturnTypeException {
         PWRet eventLoopResponse = EventLoop.execute(this.displayMessage);
 
         if (eventLoopResponse == PWRet.CANCEL) {
             if (this.abort() == PWRet.OK) {
-                System.out.println("--------- OPERAÇÃO CANCELADA NO PIN-PAD ---------");
+                System.out.println("--------- OPERAÇÃO CANCELADA ---------");
             }
         }
     }
@@ -162,6 +186,17 @@ public class Transaction {
         return LibFunctions.addParam(param, data);
     }
 
+    private HashMap<PWInfo, String> getConfirmationParams() throws InvalidReturnTypeException {
+        HashMap<PWInfo, String> confirmationParams = new HashMap<>();
+
+        for (PWInfo info : Arrays.asList(PWInfo.REQNUM, PWInfo.AUTLOCREF, PWInfo.AUTEXTREF, PWInfo.VIRTMERCH, PWInfo.AUTHSYST)) {
+            getResult(info);
+            confirmationParams.put(info, new String(value));
+        }
+
+        return confirmationParams;
+    }
+
     private PWRet abort() throws InvalidReturnTypeException {
         return LibFunctions.abortTransaction();
     }
@@ -169,7 +204,7 @@ public class Transaction {
     private void printGetData(int index) {
         PWGetData pwGetData = this.getData[index];
 
-        System.out.println("\n==== PARAM GETDATA ====");
+        System.out.println("\n==== PARAMS GETDATA ====");
 
         try {
             System.out.println("IDENTIFICADOR: " + pwGetData.getIdentificador());
@@ -186,23 +221,5 @@ public class Transaction {
         }
 
         System.out.println("==== ==== ====\n");
-    }
-
-    public void showTransactionStatus() throws InvalidReturnTypeException {
-        if(this.numParams.getValue() != 10) {
-            System.out.println("\n============================================\n" +
-                    "============ Dados da Transação ============" +
-                    "\n============================================");
-        }
-
-        for (PWInfo param : PWInfo.values()) {
-            PWRet returnedCode = this.getResult(param);
-
-            if (returnedCode == PWRet.OK) {
-                boolean formatOutput = Stream.of(PWInfo.RCPTMERCH, PWInfo.RCPTCHOLDER, PWInfo.RCPTCHSHORT, PWInfo.RCPTFULL).noneMatch(param::equals);
-
-                System.out.println(param + ": " + getValue(formatOutput));
-            }
-        }
     }
 }

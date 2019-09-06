@@ -1,10 +1,13 @@
 package br.com.paygo.interop;
 
+import br.com.paygo.enums.PWCnf;
 import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWOper;
 import br.com.paygo.enums.PWRet;
 import br.com.paygo.exception.InvalidReturnTypeException;
 import com.sun.jna.ptr.ShortByReference;
+
+import java.util.List;
 
 public class LibFunctions {
     static private PGWebLib pgWebLib = new PGWebLib();
@@ -27,6 +30,10 @@ public class LibFunctions {
 
     static PWRet executeTransaction(PWGetData[] getData, ShortByReference numParams) throws InvalidReturnTypeException {
         return PWRet.valueOf(pgWebLib.executeTransaction(getData, numParams));
+    }
+
+    static PWRet confirmTransaction(PWCnf confirmationType, List<String> params) throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.confirmTransaction(confirmationType, params.get(0), params.get(1), params.get(2), params.get(3), params.get(4)));
     }
 
     static PWRet removeCardFromPINPad() throws InvalidReturnTypeException {

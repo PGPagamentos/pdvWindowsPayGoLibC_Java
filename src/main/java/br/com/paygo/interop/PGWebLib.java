@@ -43,10 +43,10 @@ public class PGWebLib {
         return libInterface.PW_iExecTransac(getData, numParams);
     }
 
-    public short confirmTransaction(PWCnf transactionResult, String transactionLocalRef, String transactionPGWRef,
+    public short confirmTransaction(PWCnf confirmationType, String transactionLocalRef, String transactionPGWRef,
                                     String transactionProviderRef, String storeId, String providerName) {
 
-        return libInterface.PW_iConfirmation(transactionResult.getValue(), transactionLocalRef, transactionPGWRef,
+        return libInterface.PW_iConfirmation(confirmationType.getValue(), transactionLocalRef, transactionPGWRef,
                 transactionProviderRef, storeId, providerName);
     }
 

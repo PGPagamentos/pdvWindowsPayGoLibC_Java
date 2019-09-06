@@ -1,7 +1,7 @@
 package br.com.paygo.exception;
 
 /**
- * Exception lançada quando um tipo de dado que deve ser retornado para o biblioteca PGWebLib não estiver mapeado na aplicação.
+ * Exception lançada quando um tipo de dado que deve ser retornado para o biblioteca PGWebLib (PWInfo) não estiver mapeado na aplicação.
  */
 public class InvalidInfoType extends InvalidReturnTypeException {
 
