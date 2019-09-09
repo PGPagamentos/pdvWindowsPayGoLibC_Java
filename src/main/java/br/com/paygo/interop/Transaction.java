@@ -5,6 +5,7 @@ import br.com.paygo.enums.PWOper;
 import br.com.paygo.enums.PWRet;
 import br.com.paygo.exception.InvalidReturnTypeException;
 import br.com.paygo.exception.MandatoryParamException;
+import br.com.paygo.gui.UserInterface;
 import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.helper.UserInputHandler;
 import com.sun.jna.ptr.ShortByReference;
@@ -28,14 +29,16 @@ public class Transaction {
         put(PWInfo.CURREXP, "2");
     }};
 
-    private PWOper operation;
+    private final UserInterface userInterface;
     private final ShortByReference numParams;
+    private PWOper operation;
     private PWGetData[] getData;
     private byte[] displayMessage;
     private byte[] value;
 
-    public Transaction(PWOper operation) {
+    public Transaction(PWOper operation, UserInterface userInterface) {
         this.operation = operation;
+        this.userInterface = userInterface;
         this.numParams = new ShortByReference((short)10);
         this.getData = (PWGetData[]) new PWGetData().toArray(numParams.getValue());
         this.displayMessage = new byte[128];
@@ -75,21 +78,21 @@ public class Transaction {
                     Menu menu = new Menu(pwGetData);
                     String optionSelected = UserInputHandler.requestSelectionFromMenu(menu);
 
-                    System.out.println("=> PW_iAddParam: " + this.addParam(pwGetData.getIdentificador(), optionSelected));
+                    this.addParam(pwGetData.getIdentificador(), optionSelected);
                     break;
                 case USERAUTH:
                     System.out.println("DIGITE A SENHA:");
-                    System.out.println("=> PW_iAddParam: " + this.addParam(pwGetData.getIdentificador(), scan.nextLine()));
+                    this.addParam(pwGetData.getIdentificador(), scan.nextLine());
                     break;
                 case TYPED:
                     String typedData = UserInputHandler.getTypedData(pwGetData.getPrompt(), pwGetData.getTamanhoMaximo(),
                             pwGetData.getTamanhoMinimo(), pwGetData.getTipoEntradaPermitido(), pwGetData.getValorInicial());
 
-                    System.out.println("=> PW_iAddParam: " + this.addParam(pwGetData.getIdentificador(), typedData));
+                    this.addParam(pwGetData.getIdentificador(), typedData);
                     break;
                 case PPREMCRD:
                     System.out.println("Saindo do fluxo pelo RemoveCard: " + pwGetData.getPrompt());
-                    System.out.println("=> PW_iPPRemoveCard: " + LibFunctions.removeCardFromPINPad());
+                    userInterface.logInfo("=> PW_iPPRemoveCard: " + LibFunctions.removeCardFromPINPad());
 
                     executeEventLoop();
                     break;
@@ -100,20 +103,20 @@ public class Transaction {
 
                         String cardNumber = scan.nextLine();
 
-                        System.out.println("=> PW_iAddParam: " + this.addParam(PWInfo.CARDFULLPAN, cardNumber));
-                        System.out.println("=> PW_iGetResult: " + this.getResult(PWInfo.CARDFULLPAN));
+                        this.addParam(PWInfo.CARDFULLPAN, cardNumber);
+                        userInterface.logInfo("=> PW_iGetResult: " + this.getResult(PWInfo.CARDFULLPAN));
                     } else { // pin-pad
                         System.out.println("Aguarde a capturta no PIN PAD...");
-                        System.out.println("=> PW_iPPGetCard: " + LibFunctions.getCardFromPINPad(index));
+                        userInterface.logInfo("=> PW_iPPGetCard: " + LibFunctions.getCardFromPINPad(index));
                         executeEventLoop();
                     }
                     break;
                 case CARDOFF:
-                    System.out.println("=> PW_iPPGoOnChip: " + LibFunctions.offlineCardProcessing(index));
+                    userInterface.logInfo("=> PW_iPPGoOnChip: " + LibFunctions.offlineCardProcessing(index));
                     executeEventLoop();
                     break;
                 case CARDONL:
-                    System.out.println("=> PW_iPPFinishChip: " + LibFunctions.finishOfflineProcessing(index));
+                    userInterface.logInfo("=> PW_iPPFinishChip: " + LibFunctions.finishOfflineProcessing(index));
                     executeEventLoop();
                     break;
             }
@@ -137,7 +140,7 @@ public class Transaction {
                 Confirmation confirmation = new Confirmation(this, confirmationParams);
 
                 ret = confirmation.executeConfirmationProcess(false);
-                System.out.println("=> PW_iConfirmation: " + ret);
+                userInterface.logInfo("=> PW_iConfirmation: " + ret);
             }
         } catch (InvalidReturnTypeException e) {
             System.out.println("Erro ao confirmar a transação!");
@@ -146,6 +149,18 @@ public class Transaction {
         }
 
         return ret;
+    }
+
+    public PWRet addParam(PWInfo param, String data) {
+        try {
+            PWRet code = LibFunctions.addParam(param, data);
+            userInterface.logParam(param, data);
+
+            return code;
+        } catch (InvalidReturnTypeException e) {
+            userInterface.showException(e.getMessage(), false);
+        }
+        return PWRet.INVPARAM;
     }
 
     public String getValue(boolean formatted) {
@@ -180,10 +195,6 @@ public class Transaction {
                 }
             }
         }
-    }
-
-    private PWRet addParam(PWInfo param, String data) throws InvalidReturnTypeException {
-        return LibFunctions.addParam(param, data);
     }
 
     private HashMap<PWInfo, String> getConfirmationParams() throws InvalidReturnTypeException {
