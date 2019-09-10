@@ -2,57 +2,50 @@ package br.com.paygo.helper;
 
 import br.com.paygo.enums.PWValidDataEntry;
 import br.com.paygo.interop.Menu;
+import br.com.paygo.ui.UserInterface;
 
+import java.util.ArrayList;
 import java.util.Map;
-import java.util.Scanner;
 
 public class UserInputHandler {
 
-    public static String getTypedData(String promptMessage, byte maxSize, byte minSize, PWValidDataEntry validDataEntry, String initialValue) {
+    public static String getTypedData(UserInterface userInterface, String promptMessage, byte maxSize, byte minSize, PWValidDataEntry validDataEntry, String initialValue, String mascaraCaptura) {
         boolean isValid;
         String typedData;
 
         do {
-            typedData = requestUserInput(promptMessage);
+            typedData = requestUserInput(userInterface, promptMessage, mascaraCaptura);
 
-            isValid = validateUserInput(typedData, maxSize, minSize, validDataEntry, initialValue);
+            isValid = validateUserInput(userInterface, typedData, maxSize, minSize, validDataEntry, initialValue);
         } while (!isValid);
 
         return typedData;
     }
 
-    public static String requestSelectionFromMenu(Menu menu) {
-        Scanner scanner = new Scanner(System.in);
+    public static String requestSelectionFromMenu(UserInterface userInterface, Menu menu) {
         int userInput;
-        int menuIndex = 1;
-
         Map<String, String> menuOptions = menu.build();
 
         do {
-            for (Map.Entry entry: menuOptions.entrySet()) {
-                System.out.println("[" + menuIndex++ + "] " + entry.getValue() + " (" + entry.getKey() + ")");
-            }
-
-            System.out.println("SELECIONE UMA OPÇÃO:");
-            userInput = scanner.nextInt() - 1;
-
+            userInput = userInterface.requestSelection("Selecione uma opção", new ArrayList<>(menuOptions.values()));
         } while (userInput > menu.getSize() || userInput < 0);
 
         return (String) menuOptions.keySet().toArray()[userInput];
     }
 
-    private static String requestUserInput(String promptMessage) {
-        System.out.println("||| " + promptMessage + " |||");
-        Scanner scan = new Scanner(System.in);
+    private static String requestUserInput(UserInterface userInterface, String promptMessage, String mask) {
+        return userInterface.requestParam(promptMessage, "", mask);
 
-        return scan.nextLine();
     }
 
-    private static boolean validateUserInput(String typedData, byte maxSize, byte minSize, PWValidDataEntry validDataEntry, String initialValue) {
+    private static boolean validateUserInput(UserInterface userInterface, String typedData, byte maxSize, byte minSize,
+                                             PWValidDataEntry validDataEntry, String initialValue) {
         if (typedData.length() > maxSize) {
-            System.out.println("Tamanho maior que o maximo permitido (" + maxSize + ")\nTente novamente...");
+            userInterface.alert("Tamanho maior que o maximo permitido (" + maxSize + ").\nTente novamente...");
+            System.out.println();
         } else if (typedData.length() < minSize) {
-            System.out.println("Tamanho menor que o maximo permitido (" + minSize + ")\nTente novamente...");
+            userInterface.alert("Tamanho menor que o mínimo permitido (" + minSize + ").\nTente novamente...");
+            System.out.println();
         } else {
             switch (validDataEntry) {
                 case INITIAL_VALUE:
@@ -63,21 +56,20 @@ public class UserInputHandler {
                     if(typedData.matches("[0-9]+")) {
                         return true;
                     }
-
-                    System.out.println("Digite apenas números");
+                    userInterface.alert("Digite apenas números");
                     break;
                 case ALPHABETIC:
                     if(typedData.matches("[a-zA-Z]+")) {
                         return true;
                     }
 
-                    System.out.println("Digite apenas alfabéticos");
+                    userInterface.alert("Digite apenas alfabéticos");
                 case ALPHANUMERIC:
                     if(typedData.matches("[0-9a-zA-Z]+")) {
                         return true;
                     }
 
-                    System.out.println("Digite apenas alfanuméricos");
+                    userInterface.alert("Digite apenas alfanuméricos");
                 case ALL:
                     System.out.println("aceitando numéricos, alfanuméricos e especiais");
                     return true;

@@ -3,11 +3,12 @@ package br.com.paygo.interop;
 import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWOper;
 import br.com.paygo.enums.PWRet;
+import br.com.paygo.enums.PWValidDataEntry;
 import br.com.paygo.exception.InvalidReturnTypeException;
 import br.com.paygo.exception.MandatoryParamException;
-import br.com.paygo.gui.UserInterface;
 import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.helper.UserInputHandler;
+import br.com.paygo.ui.UserInterface;
 import com.sun.jna.ptr.ShortByReference;
 
 import java.util.Arrays;
@@ -76,17 +77,18 @@ public class Transaction {
             switch (pwGetData.getTipoDeDado()) {
                 case MENU:
                     Menu menu = new Menu(pwGetData);
-                    String optionSelected = UserInputHandler.requestSelectionFromMenu(menu);
+                    String optionSelected = UserInputHandler.requestSelectionFromMenu(userInterface, menu);
 
                     this.addParam(pwGetData.getIdentificador(), optionSelected);
                     break;
                 case USERAUTH:
-                    System.out.println("DIGITE A SENHA:");
-                    this.addParam(pwGetData.getIdentificador(), scan.nextLine());
+                    String password = UserInputHandler.getTypedData(userInterface, "Digite a senha:",
+                            (byte)20, (byte)4, PWValidDataEntry.ALPHANUMERIC, pwGetData.getValorInicial(), "");
+                    this.addParam(pwGetData.getIdentificador(), password);
                     break;
                 case TYPED:
-                    String typedData = UserInputHandler.getTypedData(pwGetData.getPrompt(), pwGetData.getTamanhoMaximo(),
-                            pwGetData.getTamanhoMinimo(), pwGetData.getTipoEntradaPermitido(), pwGetData.getValorInicial());
+                    String typedData = UserInputHandler.getTypedData(userInterface, pwGetData.getPrompt(), pwGetData.getTamanhoMaximo(),
+                            pwGetData.getTamanhoMinimo(), pwGetData.getTipoEntradaPermitido(), pwGetData.getValorInicial(), pwGetData.getMascaraDeCaptura());
 
                     this.addParam(pwGetData.getIdentificador(), typedData);
                     break;
@@ -97,7 +99,7 @@ public class Transaction {
                     executeEventLoop();
                     break;
                 case CARDINF:
-                    System.out.println("Prompt: " + pwGetData.getPrompt());
+                    userInterface.logInfo(pwGetData.getPrompt());
                     if (pwGetData.getTipoEntradaCartao() == 1) { // digitado
                         System.out.println("Digite o numero do cartão");
 
@@ -106,7 +108,7 @@ public class Transaction {
                         this.addParam(PWInfo.CARDFULLPAN, cardNumber);
                         userInterface.logInfo("=> PW_iGetResult: " + this.getResult(PWInfo.CARDFULLPAN));
                     } else { // pin-pad
-                        System.out.println("Aguarde a capturta no PIN PAD...");
+                        userInterface.logInfo("CAPTURA DE DADOS DO PIN-PAD");
                         userInterface.logInfo("=> PW_iPPGetCard: " + LibFunctions.getCardFromPINPad(index));
                         executeEventLoop();
                     }
@@ -154,7 +156,7 @@ public class Transaction {
     public PWRet addParam(PWInfo param, String data) {
         try {
             PWRet code = LibFunctions.addParam(param, data);
-            userInterface.logParam(param, data);
+            userInterface.logInfo("Parâmetro '" + param + "(" + param.getValue() + "): " + data + "' adicionado.");
 
             return code;
         } catch (InvalidReturnTypeException e) {
@@ -163,12 +165,20 @@ public class Transaction {
         return PWRet.INVPARAM;
     }
 
+    public PWRet abort() throws InvalidReturnTypeException {
+        return LibFunctions.abortTransaction();
+    }
+
     public String getValue(boolean formatted) {
         return formatted ? TextFormatter.formatByteMessage(this.value) : new String(this.value);
     }
 
+    public UserInterface getUserInterface() {
+        return userInterface;
+    }
+
     private void executeEventLoop() throws InvalidReturnTypeException {
-        PWRet eventLoopResponse = EventLoop.execute(this.displayMessage);
+        PWRet eventLoopResponse = EventLoop.execute(userInterface, this.displayMessage);
 
         if (eventLoopResponse == PWRet.CANCEL) {
             if (this.abort() == PWRet.OK) {
@@ -206,10 +216,6 @@ public class Transaction {
         }
 
         return confirmationParams;
-    }
-
-    private PWRet abort() throws InvalidReturnTypeException {
-        return LibFunctions.abortTransaction();
     }
 
     private void printGetData(int index) {

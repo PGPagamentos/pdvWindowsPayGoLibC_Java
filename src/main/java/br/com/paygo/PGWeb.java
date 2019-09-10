@@ -3,10 +3,14 @@ package br.com.paygo;
 import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWOper;
 import br.com.paygo.enums.PWRet;
-import br.com.paygo.gui.UserInterface;
+import br.com.paygo.exception.InvalidReturnTypeException;
 import br.com.paygo.interop.Confirmation;
 import br.com.paygo.interop.LibFunctions;
 import br.com.paygo.interop.Transaction;
+import br.com.paygo.ui.UserInterface;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class PGWeb {
 
@@ -33,6 +37,11 @@ public class PGWeb {
         try {
             transaction = new Transaction(PWOper.INSTALL, userInterface);
             returnedCode = transaction.start();
+
+            HashMap<PWInfo, String> externalParams = userInterface.getParams();
+            for (Map.Entry<PWInfo, String> param : externalParams.entrySet()) {
+                transaction.addParam(param.getKey(), param.getValue());
+            }
 
             userInterface.logInfo("=> PW_iNewTransac: " + returnedCode.toString());
 
@@ -82,6 +91,8 @@ public class PGWeb {
                     returnedCode = confirmation.executeConfirmationProcess(true);
 
                     userInterface.logInfo("=> PW_iConfirmation: " + returnedCode);
+                } else if(returnedCode == PWRet.PINPADERR) {
+                    userInterface.showException("Erro de comunição com o PIN-pad", false);
                 }
             } else {
                 returnedCode = transaction.getResult(PWInfo.RESULTMSG);
@@ -96,7 +107,11 @@ public class PGWeb {
         }
     }
 
-    public PWRet addParam(PWInfo param, String value) {
-        return this.transaction.addParam(param, value);
+    public void abort() {
+        try {
+            this.transaction.abort();
+        } catch (InvalidReturnTypeException e) {
+            userInterface.showException(e.getMessage(), true);
+        }
     }
 }

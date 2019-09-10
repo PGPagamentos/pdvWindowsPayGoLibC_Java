@@ -3,10 +3,11 @@ package br.com.paygo.interop;
 import br.com.paygo.enums.PWRet;
 import br.com.paygo.exception.InvalidReturnTypeException;
 import br.com.paygo.helper.TextFormatter;
+import br.com.paygo.ui.UserInterface;
 
 class EventLoop {
 
-    static PWRet execute(byte[] displayMessage) throws InvalidReturnTypeException {
+    static PWRet execute(UserInterface userInterface, byte[] displayMessage) throws InvalidReturnTypeException {
         PWRet eventLoopResponse;
 
         do {
@@ -14,7 +15,7 @@ class EventLoop {
 
             if (eventLoopResponse == PWRet.DISPLAY) {
                 String message = TextFormatter.formatByteMessage(displayMessage);
-                System.out.println("\n\n\n\t" + message + "\n\n");
+                userInterface.logInfo("\n\n" + message + "\n\n");
             }
 
             if(eventLoopResponse == PWRet.CANCEL) {

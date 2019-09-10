@@ -5,7 +5,10 @@ import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWRet;
 import br.com.paygo.exception.InvalidReturnTypeException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Classe responsável por realizar a confirmação de uma transação.
@@ -40,21 +43,12 @@ public class Confirmation {
         if (!pendingTransaction && !confirmationParams.isEmpty()) {
             confirmationType = PWCnf.AUTO;
         } else {
-            System.out.println("======== CONFIRMAÇÃO PENDENTE ========");
-            Scanner scanner = new Scanner(System.in);
-            int selectedOption;
+            transaction.getUserInterface().logInfo("======== CONFIRMAÇÃO PENDENTE ========");
 
             confirmationType = retrieveConfirmationType();
+            int actionSelected = retrieveAction();
 
-            do {
-                System.out.println("Ação:" +
-                        "\n [1] Confirmar última transação" +
-                        "\n [2] Informar dados manualmente");
-
-                selectedOption = scanner.nextInt();
-            } while(selectedOption < 1 || selectedOption > 2);
-
-            if (selectedOption == 1) {
+            if (actionSelected == 0) {
                 getConfirmationData();
             } else {
                 retrieveConfirmationData();
@@ -68,37 +62,44 @@ public class Confirmation {
      * Solicitação ao usuário o tipo de confirmação que deve ser realizada.
      */
     private PWCnf retrieveConfirmationType() {
-        Scanner scanner = new Scanner(System.in);
         int selectedOption;
+        ArrayList<String> confirmationTypeOptions = new ArrayList<>();
+
+        for (PWCnf pwCnf : PWCnf.values()) {
+            confirmationTypeOptions.add(pwCnf.toString());
+        }
 
         do {
-            System.out.println("Selecione o tipo de confirmação:" +
-                    "\n [1] " + PWCnf.AUTO +
-                    "\n [2] " + PWCnf.MANU_AUT +
-                    "\n [3] " + PWCnf.REV_MANU_AUT +
-                    "\n [4] " + PWCnf.REV_PRN_AUT +
-                    "\n [5] " + PWCnf.REV_DISP_AUT +
-                    "\n [6] " + PWCnf.REV_COMM_AUT +
-                    "\n [7] " + PWCnf.REV_ABORT +
-                    "\n [8] " + PWCnf.REV_OTHER_AUT +
-                    "\n [9] " + PWCnf.REV_PWR_AUT +
-                    "\n[10] " + PWCnf.REV_FISC_AUT);
-
-            selectedOption = scanner.nextInt();
+            selectedOption = transaction.getUserInterface().requestSelection("Selecione o tipo de confirmação", confirmationTypeOptions);
         } while (selectedOption < 1 || selectedOption > 10);
 
-        return PWCnf.values()[selectedOption-1];
+        return PWCnf.values()[selectedOption];
+    }
+
+    /**
+     * Solicita ao usuário a forma que deseja realizar a confirmação da transação pendente.
+     */
+    private int retrieveAction() {
+        int selectedOption;
+        ArrayList<String> actions = new ArrayList<>();
+
+        actions.add("Confirmar última transação");
+        actions.add("Informar dados manualmente");
+
+        do {
+            selectedOption = transaction.getUserInterface().requestSelection("Ação", actions);
+        } while(selectedOption < 0 || selectedOption > 1);
+
+        return selectedOption;
     }
 
     /**
      * Solicita ao usuários os parâmetros de uma transação pendente.
      */
     private void retrieveConfirmationData() {
-        Scanner scanner = new Scanner(System.in);
-
         for (PWInfo info : requiredPendingParams) {
-            System.out.println("-> " + info + ":");
-            confirmationParams.put(info, scanner.nextLine());
+            String response = transaction.getUserInterface().requestParam("Parâmetros da transação pendente", info.toString(), "");
+            confirmationParams.put(info, response);
         }
     }
 
@@ -108,14 +109,14 @@ public class Confirmation {
     private void getConfirmationData() throws InvalidReturnTypeException {
         byte[] value;
 
-        System.out.println("Buscando automaticamente os parâmetros de confirmação da transação pendente.");
+        transaction.getUserInterface().logInfo("Buscando automaticamente os parâmetros de confirmação da transação pendente.");
 
         for (PWInfo info : requiredPendingParams) {
             value = new byte[1000];
 
             LibFunctions.getResult(info, value);
 
-            System.out.println(info + " - " + new String(value));
+            transaction.getUserInterface().logInfo(info + " - " + new String(value));
 
             confirmationParams.put(info, new String(value));
         }

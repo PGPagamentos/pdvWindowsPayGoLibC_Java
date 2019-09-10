@@ -2,17 +2,15 @@ package br.com.paygo;
 
 import br.com.paygo.enums.PWOper;
 import br.com.paygo.enums.PWRet;
-import br.com.paygo.gui.SwingInterface;
-import br.com.paygo.gui.UserInterface;
 import br.com.paygo.interop.Confirmation;
 import br.com.paygo.interop.Transaction;
+import br.com.paygo.ui.SwingInterface;
+import br.com.paygo.ui.UserInterface;
 
 public class App
 {
     public static void main(String[] args) {
         UserInterface userInterface = new SwingInterface();
-        userInterface.init();
-        userInterface.install();
     }
 
     /*
