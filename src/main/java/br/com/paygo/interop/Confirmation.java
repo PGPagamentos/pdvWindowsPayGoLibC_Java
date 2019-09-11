@@ -6,7 +6,7 @@ import br.com.paygo.enums.PWRet;
 import br.com.paygo.exception.InvalidReturnTypeException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +29,7 @@ public class Confirmation {
 
     public Confirmation(Transaction transaction) {
         this.transaction = transaction;
-        this.confirmationParams = new HashMap<>();
+        this.confirmationParams = new LinkedHashMap<>();
     }
 
     public Confirmation(Transaction transaction, Map<PWInfo, String> confirmationParams) {
