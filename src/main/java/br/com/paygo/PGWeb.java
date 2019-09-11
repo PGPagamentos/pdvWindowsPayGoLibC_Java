@@ -4,7 +4,6 @@ import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWOper;
 import br.com.paygo.enums.PWRet;
 import br.com.paygo.exception.InvalidReturnTypeException;
-import br.com.paygo.interop.Confirmation;
 import br.com.paygo.interop.LibFunctions;
 import br.com.paygo.interop.Transaction;
 import br.com.paygo.ui.UserInterface;
@@ -29,142 +28,43 @@ public class PGWeb {
     }
 
     public void install() {
-        PWRet returnedCode;
+        transaction = new Transaction(PWOper.INSTALL, userInterface);
+        PWRet returnedCode = transaction.executeOperation();
 
-        try {
-            transaction = new Transaction(PWOper.INSTALL, userInterface);
-            returnedCode = transaction.start();
-
-            if (returnedCode == PWRet.OK) {
-                do {
-                    returnedCode = transaction.executeTransaction();
-                    userInterface.logInfo("=> PW_iExecTransac: " + returnedCode);
-
-                    if (returnedCode == PWRet.MOREDATA) {
-                        transaction.retrieveMoreData();
-                    }
-                } while (returnedCode == PWRet.MOREDATA);
-
-                if (returnedCode == PWRet.OK) {
-                    userInterface.logInfo("\n\n=> INSTALAÇÃO CONCLUÍDA <=\n\n");
-                }
-            } else {
-                returnedCode = transaction.getResult(PWInfo.RESULTMSG);
-                userInterface.logInfo("=> PW_iGetResult: " + returnedCode + "\n\t" + transaction.getValue(true));
-            }
-        } catch (Exception e) {
-            userInterface.showException(e.getMessage(), true);
+        if (returnedCode == PWRet.OK) {
+            userInterface.logInfo("\n\n=> INSTALAÇÃO CONCLUÍDA <=\n\n");
         }
     }
 
     public void sale() {
-        PWRet returnedCode;
+        transaction = new Transaction(PWOper.SALE, userInterface);
 
-        try {
-            transaction = new Transaction(PWOper.SALE, userInterface);
-            returnedCode = transaction.start();
+        PWRet returnedCode = transaction.executeOperation();
 
-            if (returnedCode == PWRet.OK) {
-                do {
-                    returnedCode = transaction.executeTransaction();
-                    userInterface.logInfo("=> PW_iExecTransac: " + returnedCode);
-
-                    if (returnedCode == PWRet.MOREDATA) {
-                        transaction.retrieveMoreData();
-                    }
-                } while (returnedCode == PWRet.MOREDATA);
-
-                if (returnedCode == PWRet.OK) {
-                    returnedCode = transaction.finalizeTransaction();
-
-                    transaction.getResult(PWInfo.RESULTMSG);
-                    userInterface.logInfo("\n\t" + transaction.getValue(true));
-
-                    if (returnedCode == PWRet.OK) {
-                        userInterface.logInfo("\n\n=> VENDA CONCLUÍDA <=\n\n");
-                    }
-                } else if(returnedCode == PWRet.REQPARAM) {
-                    userInterface.showException("Falha de comunicação com a infraestrutura do Pay&Go Web (falta parâmetro obrigatório).", false);
-                } else if(returnedCode == PWRet.FROMHOSTPENDTRN) {
-                    System.out.println("===========================================\n" +
-                            "== ERRO - EXITSTE UMA TRANSAÇÃO PENDENTE ==\n" +
-                            "===========================================");
-                    Confirmation confirmation = new Confirmation(transaction);
-                    returnedCode = confirmation.executeConfirmationProcess(true);
-
-                    userInterface.logInfo("=> PW_iConfirmation: " + returnedCode);
-
-                    if (returnedCode == PWRet.OK) {
-                        userInterface.logInfo("\n\n=> CONFIRMAÇÃO PENDENTE CONCLUÍDA <=\n\n");
-                    }
-                } else if(returnedCode == PWRet.PINPADERR) {
-                    userInterface.showException("Erro de comunição com o PIN-pad", false);
-                }
-            } else {
-                returnedCode = transaction.getResult(PWInfo.RESULTMSG);
-                userInterface.logInfo("=> PW_iGetResult: " + returnedCode + "\n\t" + transaction.getValue(true));
-            }
-        } catch (Exception e) {
-            userInterface.showException(e.getMessage(), true);
+        if (returnedCode == PWRet.OK) {
+            userInterface.logInfo("\n\n=> VENDA CONCLUÍDA <=\n\n");
         }
     }
 
     public void reprint() {
-        PWRet returnedCode;
+        transaction = new Transaction(PWOper.REPRINT, userInterface);
+        PWRet returnedCode = transaction.executeOperation();
 
-        try {
-            transaction = new Transaction(PWOper.REPRINT, userInterface);
-            returnedCode = transaction.start();
+        if (returnedCode == PWRet.OK) {
+            try {
+                transaction.getResult(PWInfo.RCPTMERCH);
+                userInterface.logInfo("------ REIMPRESSÃO - VIA ESTABELECIMENTO ------");
+                userInterface.logInfo("\t" + transaction.getValue(false) + "\n\n");
 
-            if (returnedCode == PWRet.OK) {
-                do {
-                    returnedCode = transaction.executeTransaction();
-                    userInterface.logInfo("=> PW_iExecTransac: " + returnedCode);
+                transaction.getResult(PWInfo.RCPTCHOLDER);
 
-                    if (returnedCode == PWRet.MOREDATA) {
-                        transaction.retrieveMoreData();
-                    }
-                } while (returnedCode == PWRet.MOREDATA);
+                userInterface.logInfo("------ REIMPRESSÃO - VIA CLIENTE ------");
+                userInterface.logInfo("\t" + transaction.getValue(false) + "\n\n");
 
-                if (returnedCode == PWRet.OK) {
-                    returnedCode = transaction.finalizeTransaction();
-
-                    transaction.getResult(PWInfo.RCPTMERCH);
-
-                    userInterface.logInfo("--- REIMPRESSÃO - VIA ESTABELECIMENTO ---");
-                    userInterface.logInfo("\t" + transaction.getValue(true) + "\n\n");
-
-                    transaction.getResult(PWInfo.RCPTCHOLDER);
-
-                    userInterface.logInfo("---REIMPRESSÃO - VIA CLIENTE ---");
-                    userInterface.logInfo("\t" + transaction.getValue(true) + "\n\n");
-
-                    if (returnedCode == PWRet.OK) {
-                        userInterface.logInfo("\n\n=> REIMPRESSÃO CONCLUÍDA <=\n\n");
-                    }
-                } else if(returnedCode == PWRet.REQPARAM) {
-                    userInterface.showException("Falha de comunicação com a infraestrutura do Pay&Go Web (falta parâmetro obrigatório).", false);
-                } else if(returnedCode == PWRet.FROMHOSTPENDTRN) {
-                    System.out.println("===========================================\n" +
-                            "== ERRO - EXITSTE UMA TRANSAÇÃO PENDENTE ==\n" +
-                            "===========================================");
-                    Confirmation confirmation = new Confirmation(transaction);
-                    returnedCode = confirmation.executeConfirmationProcess(true);
-
-                    userInterface.logInfo("=> PW_iConfirmation: " + returnedCode);
-
-                    if (returnedCode == PWRet.OK) {
-                        userInterface.logInfo("\n\n=> CONFIRMAÇÃO PENDENTE CONCLUÍDA <=\n\n");
-                    }
-                } else if(returnedCode == PWRet.PINPADERR) {
-                    userInterface.showException("Erro de comunição com o PIN-pad", false);
-                }
-            } else {
-                returnedCode = transaction.getResult(PWInfo.RESULTMSG);
-                userInterface.logInfo("=> PW_iGetResult: " + returnedCode + "\n\t" + transaction.getValue(true));
+                userInterface.logInfo("\n\n=> REIMPRESSÃO CONCLUÍDA <=\n\n");
+            } catch (InvalidReturnTypeException e) {
+                userInterface.showException(e.getMessage(), false);
             }
-        } catch (Exception e) {
-            userInterface.showException(e.getMessage(), true);
         }
     }
 

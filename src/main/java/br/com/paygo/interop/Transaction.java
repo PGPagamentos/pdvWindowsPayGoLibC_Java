@@ -60,6 +60,61 @@ public class Transaction {
         return ret;
     }
 
+    public PWRet executeOperation() {
+        PWRet returnedCode;
+
+        try {
+            returnedCode = this.start();
+
+            if (returnedCode == PWRet.OK) {
+                do {
+                    returnedCode = this.executeTransaction();
+                    userInterface.logInfo("=> PW_iExecTransac: " + returnedCode);
+
+                    if (returnedCode == PWRet.MOREDATA) {
+                        this.retrieveMoreData();
+                    }
+                } while (returnedCode == PWRet.MOREDATA);
+
+                if (returnedCode == PWRet.OK) {
+                    this.finalizeTransaction();
+
+                    this.getResult(PWInfo.RESULTMSG);
+                    userInterface.logInfo("\n\t" + this.getValue(true));
+                } else {
+                    if(returnedCode == PWRet.REQPARAM) {
+                        userInterface.showException("Falha de comunicação com a infraestrutura do Pay&Go Web (falta parâmetro obrigatório).", false);
+                    } else if(returnedCode == PWRet.FROMHOSTPENDTRN) {
+                        System.out.println("===========================================\n" +
+                                "== ERRO - EXITSTE UMA TRANSAÇÃO PENDENTE ==\n" +
+                                "===========================================");
+
+                        Confirmation confirmation = new Confirmation(this);
+                        returnedCode = confirmation.executeConfirmationProcess(true);
+
+                        userInterface.logInfo("=> PW_iConfirmation: " + returnedCode);
+
+                        if (returnedCode == PWRet.OK) {
+                            userInterface.logInfo("\n\n=> CONFIRMAÇÃO PENDENTE CONCLUÍDA <=\n\n");
+                        }
+
+                        return PWRet.FROMHOSTPENDTRN;
+                    } else if(returnedCode == PWRet.PINPADERR) {
+                        userInterface.showException("Erro de comunição com o PIN-pad", false);
+                    }
+                }
+            } else {
+                PWRet resultCode = this.getResult(PWInfo.RESULTMSG);
+                userInterface.logInfo("=> PW_iGetResult: " + resultCode + "\n\t" + this.getValue(true));
+            }
+
+            return returnedCode;
+        } catch (Exception e) {
+            userInterface.showException(e.getMessage(), true);
+            return PWRet.INTERNALERR;
+        }
+    }
+
     public PWRet executeTransaction() throws InvalidReturnTypeException {
         return LibFunctions.executeTransaction(getData, numParams);
     }
