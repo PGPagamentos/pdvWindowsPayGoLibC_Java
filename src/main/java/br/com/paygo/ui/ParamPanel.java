@@ -3,6 +3,7 @@ package br.com.paygo.ui;
 import br.com.paygo.enums.PWInfo;
 
 import javax.swing.*;
+import java.awt.*;
 
 class ParamPanel extends JPanel {
 
@@ -10,10 +11,13 @@ class ParamPanel extends JPanel {
     private final JTextField textField = new JTextField();
 
     ParamPanel() {
-        this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        this.add(comboBox);
+        this.setLayout(new GridLayout(3, 1, 0, 1));
 
         JLabel label = new JLabel("Valor do Parâmetro:");
+
+        textField.setMargin(new Insets(5, 2, 5, 2));
+
+        this.add(comboBox);
         this.add(label);
         this.add(textField);
     }

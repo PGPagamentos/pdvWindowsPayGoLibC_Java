@@ -8,6 +8,7 @@ import java.util.Arrays;
  * Tipos de dados que podem ser informados pela Automação
  */
 public enum PWInfo {
+    NONE(0),        // ADICIONADO MANUALMENTE. Utilizado para controle interno quando PGW não retorna um código identificador.
     OPERATION(2),    // Tipo de transação (PWOPER_xxx). Consultar os valores possíveis na descrição da função PW_iNewTransac
     POSID(17),       // Identificador do Ponto de Captura.
     AUTNAME(21),     // Nome do aplicativo de Automação

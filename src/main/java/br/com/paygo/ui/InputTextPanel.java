@@ -2,28 +2,46 @@ package br.com.paygo.ui;
 
 import javax.swing.*;
 import javax.swing.text.MaskFormatter;
+import java.awt.*;
 import java.text.ParseException;
 
 class InputTextPanel extends JPanel {
 
-    private JFormattedTextField textField;
+    private JTextField textField;
+    private JFormattedTextField formattedTextField;
+    private String mask;
 
     InputTextPanel(String message, String mask) {
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        this.mask = mask;
+        setLayout(new GridLayout(2, 1, 0,2));
+
         JLabel label = new JLabel("<html>" + message.replaceAll("\n", "<br/>") + "</html>");
-        label.setAlignmentX(0);
+
         add(label);
 
-        try {
-            textField = new JFormattedTextField(new MaskFormatter(mask.replaceAll("@", "#")));
-        } catch (ParseException e) {
-            textField = new JFormattedTextField();
+        if(!mask.equals("")) {
+            try {
+                formattedTextField = new JFormattedTextField(new MaskFormatter(mask.replaceAll("@", "#")));
+                formattedTextField.setMargin(new Insets(5, 2, 5, 2));
+                add(formattedTextField);
+            } catch (ParseException e) {
+                addSimpleTextField();
+            }
+        } else {
+            addSimpleTextField();
         }
-
-        add(textField);
     }
 
     String getValue() {
-        return textField.getText().replaceAll("[^\\d]", "");
+        if (!mask.equals("") && textField == null) {
+            return formattedTextField.getText().replaceAll("[^\\d]", "");
+        }
+        return textField.getText();
+    }
+
+    private void addSimpleTextField() {
+        textField = new JTextField();
+        textField.setMargin(new Insets(5, 2, 5, 2));
+        add(textField);
     }
 }

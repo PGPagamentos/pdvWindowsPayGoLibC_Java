@@ -14,7 +14,6 @@ import com.sun.jna.ptr.ShortByReference;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
 public class Transaction {
 
@@ -34,6 +33,7 @@ public class Transaction {
     private final ShortByReference numParams;
     private PWOper operation;
     private PWGetData[] getData;
+    private HashMap<PWInfo, String> externalParams;
     private byte[] displayMessage;
     private byte[] value;
 
@@ -42,6 +42,7 @@ public class Transaction {
         this.userInterface = userInterface;
         this.numParams = new ShortByReference((short)10);
         this.getData = (PWGetData[]) new PWGetData().toArray(numParams.getValue());
+        this.externalParams = new HashMap<>();
         this.displayMessage = new byte[128];
         this.value = new byte[1000];
     }
@@ -50,7 +51,10 @@ public class Transaction {
         PWRet ret = LibFunctions.newTransaction(this.operation);
 
         if (ret == PWRet.OK) {
+            userInterface.logInfo("=> PW_iNewTransac: " + ret.toString());
             this.addMandatoryParams();
+
+            externalParams = userInterface.getParams();
         }
 
         return ret;
@@ -65,67 +69,77 @@ public class Transaction {
     }
 
     public void retrieveMoreData() throws InvalidReturnTypeException {
-        Scanner scan = new Scanner(System.in);
-
         System.out.println("\nParam size: " + this.numParams.getValue());
 
         for (short index = 0; index < this.numParams.getValue(); index++) {
             PWGetData pwGetData = this.getData[index];
+            PWInfo identifier = pwGetData.getIdentificador();
 
             printGetData(index);
 
-            switch (pwGetData.getTipoDeDado()) {
-                case MENU:
-                    Menu menu = new Menu(pwGetData);
-                    String optionSelected = UserInputHandler.requestSelectionFromMenu(userInterface, menu);
+            if (identifier != PWInfo.NONE && externalParams.containsKey(identifier)) {
+                String paramValue = externalParams.get(identifier);
+                externalParams.remove(identifier);
 
-                    this.addParam(pwGetData.getIdentificador(), optionSelected);
-                    break;
-                case USERAUTH:
-                    String password = UserInputHandler.getTypedData(userInterface, "Digite a senha:",
-                            (byte)20, (byte)4, PWValidDataEntry.ALPHANUMERIC, pwGetData.getValorInicial(), "");
-                    this.addParam(pwGetData.getIdentificador(), password);
-                    break;
-                case TYPED:
-                    String typedData = UserInputHandler.getTypedData(userInterface, pwGetData.getPrompt(), pwGetData.getTamanhoMaximo(),
-                            pwGetData.getTamanhoMinimo(), pwGetData.getTipoEntradaPermitido(), pwGetData.getValorInicial(), pwGetData.getMascaraDeCaptura());
+                this.addParam(identifier, paramValue);
+            } else {
+                switch (pwGetData.getTipoDeDado()) {
+                    case MENU:
+                        Menu menu = new Menu(pwGetData);
+                        String optionSelected = UserInputHandler.requestSelectionFromMenu(userInterface, menu);
 
-                    this.addParam(pwGetData.getIdentificador(), typedData);
-                    break;
-                case PPREMCRD:
-                    System.out.println("Saindo do fluxo pelo RemoveCard: " + pwGetData.getPrompt());
-                    userInterface.logInfo("=> PW_iPPRemoveCard: " + LibFunctions.removeCardFromPINPad());
+                        this.addParam(identifier, optionSelected);
+                        break;
+                    case USERAUTH:
+                        String password = UserInputHandler.getTypedData(userInterface, "Digite a senha:",
+                                20, 4, PWValidDataEntry.ALPHANUMERIC);
+                        this.addParam(identifier, password);
+                        break;
+                    case TYPED:
+                        String typedData = UserInputHandler.getTypedData(userInterface, pwGetData.getPrompt(),
+                                pwGetData.getTamanhoMaximo(), pwGetData.getTamanhoMinimo(),
+                                pwGetData.getTipoEntradaPermitido(), pwGetData.getValorInicial(),
+                                pwGetData.getMascaraDeCaptura());
 
-                    executeEventLoop();
-                    break;
-                case CARDINF:
-                    userInterface.logInfo(pwGetData.getPrompt());
-                    if (pwGetData.getTipoEntradaCartao() == 1) { // digitado
-                        System.out.println("Digite o numero do cartão");
+                        this.addParam(identifier, typedData);
+                        break;
+                    case PPREMCRD:
+                        System.out.println("Saindo do fluxo pelo RemoveCard: " + pwGetData.getPrompt());
+                        userInterface.logInfo("=> PW_iPPRemoveCard: " + LibFunctions.removeCardFromPINPad());
 
-                        String cardNumber = scan.nextLine();
-
-                        this.addParam(PWInfo.CARDFULLPAN, cardNumber);
-                        userInterface.logInfo("=> PW_iGetResult: " + this.getResult(PWInfo.CARDFULLPAN));
-                    } else { // pin-pad
-                        userInterface.logInfo("CAPTURA DE DADOS DO PIN-PAD");
-                        userInterface.logInfo("=> PW_iPPGetCard: " + LibFunctions.getCardFromPINPad(index));
                         executeEventLoop();
-                    }
-                    break;
-                case CARDOFF:
-                    userInterface.logInfo("=> PW_iPPGoOnChip: " + LibFunctions.offlineCardProcessing(index));
-                    executeEventLoop();
-                    break;
-                case CARDONL:
-                    userInterface.logInfo("=> PW_iPPFinishChip: " + LibFunctions.finishOfflineProcessing(index));
-                    executeEventLoop();
-                    break;
+                        break;
+                    case CARDINF:
+                        userInterface.logInfo(pwGetData.getPrompt());
+                        if (pwGetData.getTipoEntradaCartao() == 1) { // digitado
+                            System.out.println("Digite o numero do cartão");
+
+                            String cardNumber = UserInputHandler.getTypedData(userInterface,
+                                    "Digite o numero do cartão:", 20,
+                                    16, PWValidDataEntry.NUMERIC);
+
+                            this.addParam(PWInfo.CARDFULLPAN, cardNumber);
+                            userInterface.logInfo("=> PW_iGetResult: " + this.getResult(PWInfo.CARDFULLPAN));
+                        } else { // pin-pad
+                            userInterface.logInfo("CAPTURA DE DADOS DO PIN-PAD");
+                            userInterface.logInfo("=> PW_iPPGetCard: " + LibFunctions.getCardFromPINPad(index));
+                            executeEventLoop();
+                        }
+                        break;
+                    case CARDOFF:
+                        userInterface.logInfo("=> PW_iPPGoOnChip: " + LibFunctions.offlineCardProcessing(index));
+                        executeEventLoop();
+                        break;
+                    case CARDONL:
+                        userInterface.logInfo("=> PW_iPPFinishChip: " + LibFunctions.finishOfflineProcessing(index));
+                        executeEventLoop();
+                        break;
+                }
             }
         }
 
-        System.out.println("\niGetResult(STATUS): " + this.getResult(PWInfo.STATUS) +
-                "\nValue(STATUS): " + this.getValue(true));
+        userInterface.logInfo("\n=> PW_iGetResult: " + this.getResult(PWInfo.STATUS) +
+                "\nSTATUS: " + this.getValue(true));
     }
 
     public PWRet finalizeTransaction() {
@@ -153,18 +167,6 @@ public class Transaction {
         return ret;
     }
 
-    public PWRet addParam(PWInfo param, String data) {
-        try {
-            PWRet code = LibFunctions.addParam(param, data);
-            userInterface.logInfo("Parâmetro '" + param + "(" + param.getValue() + "): " + data + "' adicionado.");
-
-            return code;
-        } catch (InvalidReturnTypeException e) {
-            userInterface.showException(e.getMessage(), false);
-        }
-        return PWRet.INVPARAM;
-    }
-
     public PWRet abort() throws InvalidReturnTypeException {
         return LibFunctions.abortTransaction();
     }
@@ -187,7 +189,7 @@ public class Transaction {
         }
     }
 
-    private void addMandatoryParams() throws InvalidReturnTypeException, MandatoryParamException {
+    private void addMandatoryParams() throws MandatoryParamException {
         for (Map.Entry<PWInfo, String> entry : mandatoryParams.entrySet()) {
             PWRet ret = addParam(entry.getKey(), entry.getValue());
 
@@ -205,6 +207,19 @@ public class Transaction {
                 }
             }
         }
+    }
+
+    private PWRet addParam(PWInfo param, String data) {
+        try {
+            PWRet code = LibFunctions.addParam(param, data);
+            userInterface.logInfo("Parâmetro '" + param + "(" + param.getValue() + "): " + data + "' adicionado.");
+
+            return code;
+        } catch (InvalidReturnTypeException e) {
+            userInterface.showException(e.getMessage(), false);
+        }
+
+        return PWRet.INVPARAM;
     }
 
     private HashMap<PWInfo, String> getConfirmationParams() throws InvalidReturnTypeException {

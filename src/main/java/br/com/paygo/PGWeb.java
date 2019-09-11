@@ -9,9 +9,6 @@ import br.com.paygo.interop.LibFunctions;
 import br.com.paygo.interop.Transaction;
 import br.com.paygo.ui.UserInterface;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class PGWeb {
 
     private final UserInterface userInterface;
@@ -38,24 +35,22 @@ public class PGWeb {
             transaction = new Transaction(PWOper.INSTALL, userInterface);
             returnedCode = transaction.start();
 
-            HashMap<PWInfo, String> externalParams = userInterface.getParams();
-            for (Map.Entry<PWInfo, String> param : externalParams.entrySet()) {
-                transaction.addParam(param.getKey(), param.getValue());
-            }
-
-            userInterface.logInfo("=> PW_iNewTransac: " + returnedCode.toString());
-
-            do {
-                returnedCode = transaction.executeTransaction();
-                userInterface.logInfo("=> PW_iExecTransac: " + returnedCode);
-
-                if (returnedCode == PWRet.MOREDATA) {
-                    transaction.retrieveMoreData();
-                }
-            } while (returnedCode == PWRet.MOREDATA);
-
             if (returnedCode == PWRet.OK) {
-                userInterface.logInfo("\n\n=> INSTALAÇÃO CONCLUÍDA <=");
+                do {
+                    returnedCode = transaction.executeTransaction();
+                    userInterface.logInfo("=> PW_iExecTransac: " + returnedCode);
+
+                    if (returnedCode == PWRet.MOREDATA) {
+                        transaction.retrieveMoreData();
+                    }
+                } while (returnedCode == PWRet.MOREDATA);
+
+                if (returnedCode == PWRet.OK) {
+                    userInterface.logInfo("\n\n=> INSTALAÇÃO CONCLUÍDA <=\n\n");
+                }
+            } else {
+                returnedCode = transaction.getResult(PWInfo.RESULTMSG);
+                userInterface.logInfo("=> PW_iGetResult: " + returnedCode + "\n\t" + transaction.getValue(true));
             }
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), true);
@@ -69,8 +64,6 @@ public class PGWeb {
             transaction = new Transaction(PWOper.SALE, userInterface);
             returnedCode = transaction.start();
 
-            userInterface.logInfo("=> PW_iNewTransac: " + returnedCode.toString());
-
             if (returnedCode == PWRet.OK) {
                 do {
                     returnedCode = transaction.executeTransaction();
@@ -83,6 +76,12 @@ public class PGWeb {
 
                 if (returnedCode == PWRet.OK) {
                     returnedCode = transaction.finalizeTransaction();
+
+                    if (returnedCode == PWRet.OK) {
+                        userInterface.logInfo("\n\n=> VENDA CONCLUÍDA <=\n\n");
+                    }
+                } else if(returnedCode == PWRet.REQPARAM) {
+                    userInterface.showException("Falha de comunicação com a infraestrutura do Pay&Go Web (falta parâmetro obrigatório).", false);
                 } else if(returnedCode == PWRet.FROMHOSTPENDTRN) {
                     System.out.println("===========================================" +
                             "== ERRO - EXITSTE UMA TRANSAÇÃO PENDENTE ==" +
@@ -91,16 +90,16 @@ public class PGWeb {
                     returnedCode = confirmation.executeConfirmationProcess(true);
 
                     userInterface.logInfo("=> PW_iConfirmation: " + returnedCode);
+
+                    if (returnedCode == PWRet.OK) {
+                        userInterface.logInfo("\n\n=> CONFIRMAÇÃO PENDENTE CONCLUÍDA <=\n\n");
+                    }
                 } else if(returnedCode == PWRet.PINPADERR) {
                     userInterface.showException("Erro de comunição com o PIN-pad", false);
                 }
             } else {
                 returnedCode = transaction.getResult(PWInfo.RESULTMSG);
                 userInterface.logInfo("=> PW_iGetResult: " + returnedCode + "\n\t" + transaction.getValue(true));
-            }
-
-            if (returnedCode == PWRet.OK) {
-                System.out.println("\n\n=> VENDA CONCLUÍDA <=");
             }
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), true);

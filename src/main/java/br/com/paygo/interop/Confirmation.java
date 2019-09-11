@@ -43,7 +43,7 @@ public class Confirmation {
         if (!pendingTransaction && !confirmationParams.isEmpty()) {
             confirmationType = PWCnf.AUTO;
         } else {
-            transaction.getUserInterface().logInfo("======== CONFIRMAÇÃO PENDENTE ========");
+            transaction.getUserInterface().logInfo("\n======== CONFIRMAÇÃO PENDENTE ========");
 
             confirmationType = retrieveConfirmationType();
             int actionSelected = retrieveAction();

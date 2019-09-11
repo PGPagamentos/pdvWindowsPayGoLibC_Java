@@ -13,6 +13,8 @@ public class CMDInterface implements UserInterface {
 
     public CMDInterface() {
         this.pgWeb = new PGWeb(this);
+        init();
+        sale();
     }
 
     @Override

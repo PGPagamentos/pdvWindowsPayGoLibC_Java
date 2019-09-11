@@ -9,6 +9,10 @@ import java.util.Map;
 
 public class UserInputHandler {
 
+    public static String getTypedData(UserInterface userInterface, String promptMessage, int maxSize, int minSize, PWValidDataEntry validDataEntry) {
+        return getTypedData(userInterface, promptMessage, (byte) maxSize, (byte) minSize, validDataEntry, "", "");
+    }
+
     public static String getTypedData(UserInterface userInterface, String promptMessage, byte maxSize, byte minSize, PWValidDataEntry validDataEntry, String initialValue, String mascaraCaptura) {
         boolean isValid;
         String typedData;
@@ -34,7 +38,7 @@ public class UserInputHandler {
     }
 
     private static String requestUserInput(UserInterface userInterface, String promptMessage, String mask) {
-        return userInterface.requestParam(promptMessage, "", mask);
+        return userInterface.requestParam("Informação Requerida", promptMessage, mask);
 
     }
 

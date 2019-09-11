@@ -5,15 +5,17 @@ import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWOper;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class SwingInterface implements UserInterface {
 
-    private final Map<PWOper, String> operations = new HashMap<PWOper, String>() {{
+    private final Map<PWOper, String> operations = new LinkedHashMap<PWOper, String>() {{
         put(PWOper.INSTALL, "Instalação");
         put(PWOper.SALE, "Venda");
     }};
@@ -29,16 +31,8 @@ public class SwingInterface implements UserInterface {
 
     public SwingInterface() {
         pgWeb = new PGWeb(this);
-
-        applicationWindow.setTitle("PGWebLib");
-        applicationWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        applicationWindow.setSize(800, 500);
-        applicationWindow.setLayout(new GridLayout());
-        setupWindow();
-
         logArea.setEditable(false);
-        applicationWindow.setVisible(true);
-
+        setupWindow();
         init();
     }
 
@@ -46,26 +40,31 @@ public class SwingInterface implements UserInterface {
         JPanel leftPanel = setupLeftPanel();
         JPanel rightPanel = setupRightPanel();
 
+        applicationWindow.setTitle("PGWebLib");
+        applicationWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        applicationWindow.setLayout(new GridLayout());
         applicationWindow.getContentPane().add(leftPanel);
         applicationWindow.getContentPane().add(rightPanel);
+        applicationWindow.pack();
+        applicationWindow.setVisible(true);
     }
 
     private JPanel setupLeftPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
 
+        // TOP PANEL
+        JComboBox operationsSelector = new JComboBox(operations.values().toArray());
+        ((JLabel) operationsSelector.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+
         JPanel topPanel = new JPanel();
+        topPanel.setLayout(new GridLayout(1, 2));
+        topPanel.setBorder(new EmptyBorder(10, 10, 5, 10));
         topPanel.add(new JLabel("OPERAÇÃO:"));
+        topPanel.add(operationsSelector);
 
-        JComboBox comboBox = new JComboBox(operations.values().toArray());
-        comboBox.setPreferredSize(new Dimension(200, 30));
-        topPanel.add(comboBox);
-
-        JPanel centerPanel = new JPanel();
-        centerPanel.add(new JLabel("PARÂMETROS:"));
-
-        JButton addParamButton = new JButton("+");
-
+        // CENTER PANEL
+        JButton addParamButton = new JButton("Adicionar");
         addParamButton.addActionListener(e -> {
             int code = JOptionPane.showConfirmDialog(null, paramPanel, "Selecione um parâmetro:", JOptionPane.OK_CANCEL_OPTION);
 
@@ -87,18 +86,17 @@ public class SwingInterface implements UserInterface {
             }
         });
 
-        JButton removeParamButton = new JButton("-");
-
+        JButton removeParamButton = new JButton("Remover");
         removeParamButton.addActionListener(e -> {
-            int selectedItem = paramList.getSelectedIndex();
+            int selectedIndex = paramList.getSelectedIndex();
+            String operValue = ((String)paramList.getSelectedValue()).replaceAll("\\(.*$", "");
 
-            if (selectedItem != -1) {
-                listModel.remove(selectedItem);
+            if (selectedIndex != -1) {
+                listModel.remove(selectedIndex);
+                PWInfo oper = PWInfo.valueOf(operValue);
+                params.keySet().remove(oper);
             }
         });
-
-        centerPanel.add(addParamButton);
-        centerPanel.add(removeParamButton);
 
         paramList.setModel(listModel);
         paramList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -109,17 +107,49 @@ public class SwingInterface implements UserInterface {
         scrollParamList.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollParamList.setPreferredSize(new Dimension(380, 300));
 
-        centerPanel.add(scrollParamList);
+        JPanel centerTopPanel = new JPanel();
+        centerTopPanel.setLayout(new GridLayout(1, 4, 5, 0));
+        centerTopPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+        centerTopPanel.add(new JLabel("PARÂMETROS:"));
+        centerTopPanel.add(new JLabel());
+        centerTopPanel.add(addParamButton);
+        centerTopPanel.add(removeParamButton);
 
-        JPanel bottomPanel = new JPanel();
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BorderLayout());
+        centerPanel.setBorder(new EmptyBorder(5, 10, 5, 10));
+        centerPanel.add(BorderLayout.NORTH, centerTopPanel);
+        centerPanel.add(BorderLayout.CENTER, scrollParamList);
 
+        // BOTTOM PANEL
         JButton clearParamsButton = new JButton("Limpar");
-        clearParamsButton.addActionListener(e -> listModel.removeAllElements());
+        clearParamsButton.addActionListener(e -> {
+            listModel.removeAllElements();
+            params.clear();
+        });
 
         JButton executeButton = new JButton("Executar");
+        executeButton.addActionListener(e -> {
+            String selectedOperation = operationsSelector.getSelectedItem().toString();
 
+            PWOper operation = operations.entrySet().stream().filter(entry -> entry.getValue().equals(selectedOperation)).map(Map.Entry::getKey).findFirst().orElse(PWOper.INSTALL);
+
+            switch (operation) {
+                case INSTALL:
+                    install();
+                    break;
+                case SALE:
+                    sale();
+                    break;
+            }
+        });
+
+        JButton pinPadButton = new JButton("Capturar dados usando PIN-pad");
+
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setBorder(new EmptyBorder(5, 0, 10, 0));
         bottomPanel.add(clearParamsButton);
-        bottomPanel.add(new JButton("Capturar dados usando PIN-pad"));
+        bottomPanel.add(pinPadButton);
         bottomPanel.add(executeButton);
 
         panel.add(BorderLayout.NORTH, topPanel);
@@ -130,31 +160,35 @@ public class SwingInterface implements UserInterface {
     }
 
     private JPanel setupRightPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new FlowLayout());
 
-        JPanel topPanel = new JPanel();
-        topPanel.setLayout(new BorderLayout());
-        topPanel.add(BorderLayout.WEST, new JLabel("LOG:"));
-
-        JButton clearLogButton = new JButton("LIMPAR");
-
+        JButton clearLogButton = new JButton("Limpar Log");
         clearLogButton.addActionListener(e -> logArea.setText(""));
 
-        topPanel.add(BorderLayout.EAST, clearLogButton);
-        panel.add(topPanel);
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new GridLayout(1, 2));
+        topPanel.setBorder(new EmptyBorder(10, 10, 5, 10));
+
+        topPanel.add(new JLabel("LOG:"));
+        topPanel.add(clearLogButton);
 
         logArea.setLineWrap(true);
         logArea.setWrapStyleWord(true);
 
         JScrollPane scroll = new JScrollPane(logArea);
         scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        scroll.setPreferredSize(new Dimension(390, 400));
+        scroll.setPreferredSize(new Dimension(385, 375));
 
         DefaultCaret caret = (DefaultCaret)logArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
-        panel.add(scroll);
+        JPanel scrollWrapper = new JPanel();
+        scrollWrapper.add(scroll);
+        scrollWrapper.setBorder(new EmptyBorder(0, 5, 10, 5));
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.add(BorderLayout.NORTH, topPanel);
+        panel.add(BorderLayout.CENTER, scrollWrapper);
 
         return panel;
     }
@@ -201,6 +235,8 @@ public class SwingInterface implements UserInterface {
 
         if (code == JOptionPane.OK_OPTION) {
             return radioGroupPanel.getSelectedOption();
+        } else if(code == JOptionPane.CANCEL_OPTION) {
+            abort();
         }
 
         return 0;
