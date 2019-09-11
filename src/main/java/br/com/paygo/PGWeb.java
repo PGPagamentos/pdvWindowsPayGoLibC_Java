@@ -77,14 +77,76 @@ public class PGWeb {
                 if (returnedCode == PWRet.OK) {
                     returnedCode = transaction.finalizeTransaction();
 
+                    transaction.getResult(PWInfo.RESULTMSG);
+                    userInterface.logInfo("\n\t" + transaction.getValue(true));
+
                     if (returnedCode == PWRet.OK) {
                         userInterface.logInfo("\n\n=> VENDA CONCLUÍDA <=\n\n");
                     }
                 } else if(returnedCode == PWRet.REQPARAM) {
                     userInterface.showException("Falha de comunicação com a infraestrutura do Pay&Go Web (falta parâmetro obrigatório).", false);
                 } else if(returnedCode == PWRet.FROMHOSTPENDTRN) {
-                    System.out.println("===========================================" +
-                            "== ERRO - EXITSTE UMA TRANSAÇÃO PENDENTE ==" +
+                    System.out.println("===========================================\n" +
+                            "== ERRO - EXITSTE UMA TRANSAÇÃO PENDENTE ==\n" +
+                            "===========================================");
+                    Confirmation confirmation = new Confirmation(transaction);
+                    returnedCode = confirmation.executeConfirmationProcess(true);
+
+                    userInterface.logInfo("=> PW_iConfirmation: " + returnedCode);
+
+                    if (returnedCode == PWRet.OK) {
+                        userInterface.logInfo("\n\n=> CONFIRMAÇÃO PENDENTE CONCLUÍDA <=\n\n");
+                    }
+                } else if(returnedCode == PWRet.PINPADERR) {
+                    userInterface.showException("Erro de comunição com o PIN-pad", false);
+                }
+            } else {
+                returnedCode = transaction.getResult(PWInfo.RESULTMSG);
+                userInterface.logInfo("=> PW_iGetResult: " + returnedCode + "\n\t" + transaction.getValue(true));
+            }
+        } catch (Exception e) {
+            userInterface.showException(e.getMessage(), true);
+        }
+    }
+
+    public void reprint() {
+        PWRet returnedCode;
+
+        try {
+            transaction = new Transaction(PWOper.REPRINT, userInterface);
+            returnedCode = transaction.start();
+
+            if (returnedCode == PWRet.OK) {
+                do {
+                    returnedCode = transaction.executeTransaction();
+                    userInterface.logInfo("=> PW_iExecTransac: " + returnedCode);
+
+                    if (returnedCode == PWRet.MOREDATA) {
+                        transaction.retrieveMoreData();
+                    }
+                } while (returnedCode == PWRet.MOREDATA);
+
+                if (returnedCode == PWRet.OK) {
+                    returnedCode = transaction.finalizeTransaction();
+
+                    transaction.getResult(PWInfo.RCPTMERCH);
+
+                    userInterface.logInfo("--- REIMPRESSÃO - VIA ESTABELECIMENTO ---");
+                    userInterface.logInfo("\t" + transaction.getValue(true) + "\n\n");
+
+                    transaction.getResult(PWInfo.RCPTCHOLDER);
+
+                    userInterface.logInfo("---REIMPRESSÃO - VIA CLIENTE ---");
+                    userInterface.logInfo("\t" + transaction.getValue(true) + "\n\n");
+
+                    if (returnedCode == PWRet.OK) {
+                        userInterface.logInfo("\n\n=> REIMPRESSÃO CONCLUÍDA <=\n\n");
+                    }
+                } else if(returnedCode == PWRet.REQPARAM) {
+                    userInterface.showException("Falha de comunicação com a infraestrutura do Pay&Go Web (falta parâmetro obrigatório).", false);
+                } else if(returnedCode == PWRet.FROMHOSTPENDTRN) {
+                    System.out.println("===========================================\n" +
+                            "== ERRO - EXITSTE UMA TRANSAÇÃO PENDENTE ==\n" +
                             "===========================================");
                     Confirmation confirmation = new Confirmation(transaction);
                     returnedCode = confirmation.executeConfirmationProcess(true);

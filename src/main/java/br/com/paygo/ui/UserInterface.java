@@ -9,6 +9,7 @@ public interface UserInterface {
     void init();
     void install();
     void sale();
+    void reprint();
     void abort();
     String requestParam(String title, String message, String mask);
     int requestSelection(String title, ArrayList<String> options);

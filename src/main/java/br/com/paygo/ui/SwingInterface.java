@@ -18,6 +18,7 @@ public class SwingInterface implements UserInterface {
     private final Map<PWOper, String> operations = new LinkedHashMap<PWOper, String>() {{
         put(PWOper.INSTALL, "Instalação");
         put(PWOper.SALE, "Venda");
+        put(PWOper.REPRINT, "Reimpressão");
     }};
     private final JFrame applicationWindow = new JFrame();
     private final JTextArea logArea = new JTextArea();
@@ -141,6 +142,11 @@ public class SwingInterface implements UserInterface {
                 case SALE:
                     sale();
                     break;
+                case REPRINT:
+                    reprint();
+                    break;
+                default:
+                    showException("Operação não encontrada!", false);
             }
         });
 
@@ -206,6 +212,11 @@ public class SwingInterface implements UserInterface {
     @Override
     public void sale() {
         pgWeb.sale();
+    }
+
+    @Override
+    public void reprint() {
+        pgWeb.reprint();
     }
 
     @Override

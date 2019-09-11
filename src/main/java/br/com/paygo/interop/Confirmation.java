@@ -71,7 +71,7 @@ public class Confirmation {
 
         do {
             selectedOption = transaction.getUserInterface().requestSelection("Selecione o tipo de confirmação", confirmationTypeOptions);
-        } while (selectedOption < 1 || selectedOption > 10);
+        } while (selectedOption < 0 || selectedOption > 9);
 
         return PWCnf.values()[selectedOption];
     }
