@@ -16,9 +16,11 @@ import java.util.Map;
 public class SwingInterface implements UserInterface {
 
     private final Map<PWOper, String> operations = new LinkedHashMap<PWOper, String>() {{
+        put(PWOper.VERSION, "Versão da DLL");
         put(PWOper.INSTALL, "Instalação");
         put(PWOper.SALE, "Venda");
         put(PWOper.REPRINT, "Reimpressão");
+        put(PWOper.SALEVOID, "Cancelamento de Venda");
     }};
     private final JFrame applicationWindow = new JFrame();
     private final JTextArea logArea = new JTextArea();
@@ -139,11 +141,17 @@ public class SwingInterface implements UserInterface {
                 case INSTALL:
                     install();
                     break;
+                case VERSION:
+                    version();
+                    break;
                 case SALE:
                     sale();
                     break;
                 case REPRINT:
                     reprint();
+                    break;
+                case SALEVOID:
+                    saleVoid();
                     break;
                 default:
                     showException("Operação não encontrada!", false);
@@ -205,6 +213,11 @@ public class SwingInterface implements UserInterface {
     }
 
     @Override
+    public void version() {
+        pgWeb.version();
+    }
+
+    @Override
     public void install() {
         pgWeb.install();
     }
@@ -217,6 +230,11 @@ public class SwingInterface implements UserInterface {
     @Override
     public void reprint() {
         pgWeb.reprint();
+    }
+
+    @Override
+    public void saleVoid() {
+        pgWeb.saleVoid();
     }
 
     @Override

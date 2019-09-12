@@ -8,7 +8,6 @@ import java.util.Arrays;
  * Tipos de dados que podem ser informados pela Automação
  */
 public enum PWInfo {
-    NONE(0),        // ADICIONADO MANUALMENTE. Utilizado para controle interno quando PGW não retorna um código identificador.
     OPERATION(2),    // Tipo de transação (PWOPER_xxx). Consultar os valores possíveis na descrição da função PW_iNewTransac
     POSID(17),       // Identificador do Ponto de Captura.
     AUTNAME(21),     // Nome do aplicativo de Automação
@@ -93,7 +92,14 @@ public enum PWInfo {
     PPINFO(0x7F15),    // Informações do PIN-pad conectado), seguindo o padrão posição/informação abaixo: 001-020 / Nome do fabricante do PIN-pad. 021-039 / Modelo/versão do hardware. 040 / Se o PIN-pad suporta cartão com chip sem contato), este campo deve conter a letra “C”), caso contrário um espaço em branco. 041-060 / Versão do software básico/firmware. 061-064 / Versão da especificação), no formato “V.VV”. 065-080 / Versão da aplicação básica), no formato “VVV.VV AAMMDD” (com 3 espaços à direita). 081-100 / Número de série do PIN-pad (com espaços à direita)
     DUEAMNT(0xBF06),   // Valor devido pelo usuário), considerando CURREXP), já deduzido em TOTAMNT
     READJUSTEDAMNT(0xBF09), // Valor total da transação reajustado), este campo será utilizado caso o autorizador), por alguma regra de negócio específica dele), resolva alterar o valor total que foi solicitado para a transação
-    STATUS((short)0x6F);
+    STATUS((short)0x6F),
+
+    // ADICIONADOS (utilizados pela aplicação, porém não constam na documentação)
+    NONE(0),                // Utilizado para controle interno quando PGW não retorna um código identificador.
+    CARDLASTDIGITS(224),    // 4 últimos dígitos do cartão
+    CARDSECCODE(199),       // código de segurança do cartão
+    PPPASSW(221),           // senha do cartão informada no PIN-pad
+    CNFCANCELREQ(45);       // Confirmação de cancelamento: 0: confirma; 1: cancela.
 
     private final int value;
 

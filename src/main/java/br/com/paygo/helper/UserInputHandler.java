@@ -54,7 +54,6 @@ public class UserInputHandler {
             switch (validDataEntry) {
                 case INITIAL_VALUE:
                     System.out.println("entrada digitada está sendo sobrescrita por: " + initialValue);
-                    typedData = initialValue.replace(" ","");
                     return true;
                 case NUMERIC:
                     if(typedData.matches("[0-9]+")) {
@@ -68,12 +67,14 @@ public class UserInputHandler {
                     }
 
                     userInterface.alert("Digite apenas alfabéticos");
+                    break;
                 case ALPHANUMERIC:
                     if(typedData.matches("[0-9a-zA-Z]+")) {
                         return true;
                     }
 
                     userInterface.alert("Digite apenas alfanuméricos");
+                    break;
                 case ALL:
                     System.out.println("aceitando numéricos, alfanuméricos e especiais");
                     return true;

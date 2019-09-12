@@ -7,9 +7,11 @@ import java.util.HashMap;
 
 public interface UserInterface {
     void init();
+    void version();
     void install();
     void sale();
     void reprint();
+    void saleVoid();
     void abort();
     String requestParam(String title, String message, String mask);
     int requestSelection(String title, ArrayList<String> options);

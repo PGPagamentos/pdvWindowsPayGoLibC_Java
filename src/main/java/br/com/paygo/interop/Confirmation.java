@@ -7,19 +7,19 @@ import br.com.paygo.exception.InvalidReturnTypeException;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Classe responsável por realizar a confirmação de uma transação.
  * Se forem passados todos os parâmetros para o objeto, ele irá realizar a confirmação da última transação.
  * Se não forem passados os parâmetros para o objeto, ele irá realizar a confirmação de uma transação pendente.
  */
-public class Confirmation {
+class Confirmation {
 
-    private Map<PWInfo, String> confirmationParams;
+    private LinkedHashMap<PWInfo, String> confirmationParams;
     private final Transaction transaction;
-    private final List<PWInfo> requiredPendingParams = new ArrayList<PWInfo>() {{
+    private final List<PWInfo> requiredPendingParams = new LinkedList<PWInfo>() {{
         add(PWInfo.PNDREQNUM);
         add(PWInfo.PNDAUTLOCREF);
         add(PWInfo.PNDAUTEXTREF);
@@ -27,17 +27,17 @@ public class Confirmation {
         add(PWInfo.PNDAUTHSYST);
     }};
 
-    public Confirmation(Transaction transaction) {
+    Confirmation(Transaction transaction) {
         this.transaction = transaction;
         this.confirmationParams = new LinkedHashMap<>();
     }
 
-    public Confirmation(Transaction transaction, Map<PWInfo, String> confirmationParams) {
+    Confirmation(Transaction transaction, LinkedHashMap<PWInfo, String> confirmationParams) {
         this.transaction = transaction;
         this.confirmationParams = confirmationParams;
     }
 
-    public PWRet executeConfirmationProcess(boolean pendingTransaction) throws Exception {
+    PWRet executeConfirmationProcess(boolean pendingTransaction) throws InvalidReturnTypeException {
         PWCnf confirmationType;
 
         if (!pendingTransaction && !confirmationParams.isEmpty()) {
@@ -55,7 +55,13 @@ public class Confirmation {
             }
         }
 
-        return LibFunctions.confirmTransaction(confirmationType, new ArrayList<>(confirmationParams.values()));
+        PWRet confirmationSuccessful = LibFunctions.confirmTransaction(confirmationType, new LinkedList<>(confirmationParams.values()));
+
+        if (confirmationSuccessful == PWRet.OK) {
+            transaction.printReceipt();
+        }
+
+        return confirmationSuccessful;
     }
 
     /**

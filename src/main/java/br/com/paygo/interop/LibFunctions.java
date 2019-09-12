@@ -7,7 +7,7 @@ import br.com.paygo.enums.PWRet;
 import br.com.paygo.exception.InvalidReturnTypeException;
 import com.sun.jna.ptr.ShortByReference;
 
-import java.util.List;
+import java.util.LinkedList;
 
 public class LibFunctions {
     static private PGWebLib pgWebLib = new PGWebLib();
@@ -32,7 +32,7 @@ public class LibFunctions {
         return PWRet.valueOf(pgWebLib.executeTransaction(getData, numParams));
     }
 
-    static PWRet confirmTransaction(PWCnf confirmationType, List<String> params) throws InvalidReturnTypeException {
+    static PWRet confirmTransaction(PWCnf confirmationType, LinkedList<String> params) throws InvalidReturnTypeException {
         return PWRet.valueOf(pgWebLib.confirmTransaction(confirmationType, params.get(0), params.get(1), params.get(2), params.get(3), params.get(4)));
     }
 
@@ -58,5 +58,9 @@ public class LibFunctions {
 
     static PWRet finishOfflineProcessing(short index) throws InvalidReturnTypeException {
         return PWRet.valueOf(pgWebLib.PINPadChipCardFinishOfflineProcessing(index));
+    }
+
+    static PWRet getPIN(short index) throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.PINPadGetPIN(index));
     }
 }

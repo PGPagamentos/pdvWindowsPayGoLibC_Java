@@ -1,6 +1,5 @@
 package br.com.paygo;
 
-import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWOper;
 import br.com.paygo.enums.PWRet;
 import br.com.paygo.exception.InvalidReturnTypeException;
@@ -27,6 +26,15 @@ public class PGWeb {
         }
     }
 
+    public void version() {
+        transaction = new Transaction(PWOper.VERSION, userInterface);
+        PWRet returnedCode = transaction.executeOperation();
+
+        if (returnedCode == PWRet.OK) {
+            userInterface.logInfo("\n\n=> VERIFICAÇÃO DE VERSÃO CONCLUÍDA <=\n\n");
+        }
+    }
+
     public void install() {
         transaction = new Transaction(PWOper.INSTALL, userInterface);
         PWRet returnedCode = transaction.executeOperation();
@@ -38,7 +46,6 @@ public class PGWeb {
 
     public void sale() {
         transaction = new Transaction(PWOper.SALE, userInterface);
-
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
@@ -51,20 +58,16 @@ public class PGWeb {
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
-            try {
-                transaction.getResult(PWInfo.RCPTMERCH);
-                userInterface.logInfo("------ REIMPRESSÃO - VIA ESTABELECIMENTO ------");
-                userInterface.logInfo("\t" + transaction.getValue(false) + "\n\n");
+            userInterface.logInfo("\n\n=> REIMPRESSÃO CONCLUÍDA <=\n\n");
+        }
+    }
 
-                transaction.getResult(PWInfo.RCPTCHOLDER);
+    public void saleVoid() {
+        transaction = new Transaction(PWOper.SALEVOID, userInterface);
+        PWRet returnedCode = transaction.executeOperation();
 
-                userInterface.logInfo("------ REIMPRESSÃO - VIA CLIENTE ------");
-                userInterface.logInfo("\t" + transaction.getValue(false) + "\n\n");
-
-                userInterface.logInfo("\n\n=> REIMPRESSÃO CONCLUÍDA <=\n\n");
-            } catch (InvalidReturnTypeException e) {
-                userInterface.showException(e.getMessage(), false);
-            }
+        if (returnedCode == PWRet.OK) {
+            userInterface.logInfo("\n\n=> CANCELAMENTO DE VENDA CONCLUÍDO <=\n\n");
         }
     }
 

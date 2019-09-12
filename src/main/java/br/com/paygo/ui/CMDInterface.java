@@ -14,12 +14,17 @@ public class CMDInterface implements UserInterface {
     public CMDInterface() {
         this.pgWeb = new PGWeb(this);
         init();
-        reprint();
+        saleVoid();
     }
 
     @Override
     public void init() {
         pgWeb.init();
+    }
+
+    @Override
+    public void version() {
+        pgWeb.version();
     }
 
     @Override
@@ -35,6 +40,11 @@ public class CMDInterface implements UserInterface {
     @Override
     public void reprint() {
         pgWeb.reprint();
+    }
+
+    @Override
+    public void saleVoid() {
+        pgWeb.saleVoid();
     }
 
     @Override
