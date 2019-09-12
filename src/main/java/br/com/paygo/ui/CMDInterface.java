@@ -48,6 +48,16 @@ public class CMDInterface implements UserInterface {
     }
 
     @Override
+    public void reportTrunc() {
+        pgWeb.reportTrunc();
+    }
+
+    @Override
+    public void reportDetail() {
+        pgWeb.reportDetail();
+    }
+
+    @Override
     public void abort() {
         logInfo("\n\n EXECUÇÃO ABORTADA PELO USUÁRIO! \n\n");
         pgWeb.abort();

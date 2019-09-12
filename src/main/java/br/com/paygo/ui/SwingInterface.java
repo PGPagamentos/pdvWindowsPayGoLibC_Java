@@ -21,6 +21,8 @@ public class SwingInterface implements UserInterface {
         put(PWOper.SALE, "Venda");
         put(PWOper.REPRINT, "Reimpressão");
         put(PWOper.SALEVOID, "Cancelamento de Venda");
+        put(PWOper.RPTTRUNC, "Relatório Sintético");
+        put(PWOper.RPTDETAIL, "Relatório Detalhado");
     }};
     private final JFrame applicationWindow = new JFrame();
     private final JTextArea logArea = new JTextArea();
@@ -153,6 +155,12 @@ public class SwingInterface implements UserInterface {
                 case SALEVOID:
                     saleVoid();
                     break;
+                case RPTTRUNC:
+                    reportTrunc();
+                    break;
+                case RPTDETAIL:
+                    reportDetail();
+                    break;
                 default:
                     showException("Operação não encontrada!", false);
             }
@@ -235,6 +243,16 @@ public class SwingInterface implements UserInterface {
     @Override
     public void saleVoid() {
         pgWeb.saleVoid();
+    }
+
+    @Override
+    public void reportTrunc() {
+        pgWeb.reportTrunc();
+    }
+
+    @Override
+    public void reportDetail() {
+        pgWeb.reportDetail();
     }
 
     @Override

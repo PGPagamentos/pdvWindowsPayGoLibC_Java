@@ -12,6 +12,8 @@ public interface UserInterface {
     void sale();
     void reprint();
     void saleVoid();
+    void reportTrunc();
+    void reportDetail();
     void abort();
     String requestParam(String title, String message, String mask);
     int requestSelection(String title, ArrayList<String> options);

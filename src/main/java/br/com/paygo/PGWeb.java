@@ -1,5 +1,6 @@
 package br.com.paygo;
 
+import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWOper;
 import br.com.paygo.enums.PWRet;
 import br.com.paygo.exception.InvalidReturnTypeException;
@@ -68,6 +69,30 @@ public class PGWeb {
 
         if (returnedCode == PWRet.OK) {
             userInterface.logInfo("\n\n=> CANCELAMENTO DE VENDA CONCLUÍDO <=\n\n");
+        }
+    }
+
+    public void reportTrunc() {
+        this.generateReport(PWOper.RPTTRUNC);
+    }
+
+    public void reportDetail() {
+        this.generateReport(PWOper.RPTDETAIL);
+    }
+
+    private void generateReport(PWOper reportType) {
+        transaction = new Transaction(reportType, userInterface);
+        PWRet returnedCode = transaction.executeOperation();
+
+        if (returnedCode == PWRet.OK) {
+            try {
+                transaction.getResult(PWInfo.RCPTFULL);
+                userInterface.logInfo("\t" + transaction.getValue(false) + "\n\n");
+
+                userInterface.logInfo("\n\n=> RELATÓRIO CONCLUÍDO <=\n\n");
+            } catch (InvalidReturnTypeException e) {
+                userInterface.showException("Erro ao exibir o relatório de operações", false);
+            }
         }
     }
 

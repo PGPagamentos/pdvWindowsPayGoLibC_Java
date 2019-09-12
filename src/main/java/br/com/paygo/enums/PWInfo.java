@@ -96,6 +96,8 @@ public enum PWInfo {
 
     // ADICIONADOS (utilizados pela aplicação, porém não constam na documentação)
     NONE(0),                // Utilizado para controle interno quando PGW não retorna um código identificador.
+    STARTTIME(123),         // horário de início do relatório detalhado
+    ENDTIME(124),           // horário de fim do relatório detalhado
     CARDLASTDIGITS(224),    // 4 últimos dígitos do cartão
     CARDSECCODE(199),       // código de segurança do cartão
     PPPASSW(221),           // senha do cartão informada no PIN-pad
