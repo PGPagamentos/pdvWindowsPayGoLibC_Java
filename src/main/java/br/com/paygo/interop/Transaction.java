@@ -96,11 +96,9 @@ public class Transaction {
     public void printReceipt() {
         try {
             this.getResult(PWInfo.RCPTMERCH);
-            userInterface.logInfo("------ REIMPRESSÃO - VIA ESTABELECIMENTO ------");
             userInterface.logInfo("\t" + this.getValue(false) + "\n\n");
 
             this.getResult(PWInfo.RCPTCHOLDER);
-            userInterface.logInfo("------ REIMPRESSÃO - VIA CLIENTE ------");
             userInterface.logInfo("\t" + this.getValue(false) + "\n\n");
         } catch (InvalidReturnTypeException e) {
             userInterface.showException(e.getMessage(), false);
@@ -111,7 +109,7 @@ public class Transaction {
         return formatted ? TextFormatter.formatByteMessage(this.value) : new String(this.value);
     }
 
-    public UserInterface getUserInterface() {
+    UserInterface getUserInterface() {
         return userInterface;
     }
 
@@ -257,6 +255,7 @@ public class Transaction {
                     userInterface.logInfo("=> PW_iConfirmation: " + returnedCode);
 
                     if (returnedCode == PWRet.OK) {
+                        this.printReceipt();
                         userInterface.logInfo("\n\n=> CONFIRMAÇÃO PENDENTE CONCLUÍDA <=\n\n");
                     }
                     break;
@@ -285,9 +284,7 @@ public class Transaction {
         }
     }
 
-    private PWRet finalizeTransaction() {
-        PWRet ret = PWRet.OK;
-
+    private void finalizeTransaction() {
         try {
             this.value = new byte[1000];
             getResult(PWInfo.CNFREQ);
@@ -298,16 +295,12 @@ public class Transaction {
 
                 Confirmation confirmation = new Confirmation(this, confirmationParams);
 
-                ret = confirmation.executeConfirmationProcess(false);
+                PWRet ret = confirmation.executeConfirmationProcess(false);
                 userInterface.logInfo("=> PW_iConfirmation: " + ret);
             }
-        } catch (InvalidReturnTypeException e) {
-            System.out.println("Erro ao confirmar a transação!");
         } catch (Exception e) {
-            e.printStackTrace();
+            userInterface.logInfo("Erro ao confirmar a transação!");
         }
-
-        return ret;
     }
 
     private LinkedHashMap<PWInfo, String> getConfirmationParams() throws InvalidReturnTypeException {

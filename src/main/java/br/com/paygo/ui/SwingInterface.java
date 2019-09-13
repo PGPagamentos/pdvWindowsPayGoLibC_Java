@@ -21,6 +21,7 @@ public class SwingInterface implements UserInterface {
         put(PWOper.SALE, "Venda");
         put(PWOper.REPRINT, "Reimpressão");
         put(PWOper.SALEVOID, "Cancelamento de Venda");
+        put(PWOper.PNDCNF, "Verifica Confirmação Pendente");
         put(PWOper.RPTTRUNC, "Relatório Sintético");
         put(PWOper.RPTDETAIL, "Relatório Detalhado");
     }};
@@ -155,6 +156,9 @@ public class SwingInterface implements UserInterface {
                 case SALEVOID:
                     saleVoid();
                     break;
+                case PNDCNF:
+                    checkPendingConfirmation();
+                    break;
                 case RPTTRUNC:
                     reportTrunc();
                     break;
@@ -246,6 +250,11 @@ public class SwingInterface implements UserInterface {
     }
 
     @Override
+    public void checkPendingConfirmation() {
+        pgWeb.checkPendingConfirmation();
+    }
+
+    @Override
     public void reportTrunc() {
         pgWeb.reportTrunc();
     }
@@ -257,7 +266,6 @@ public class SwingInterface implements UserInterface {
 
     @Override
     public void abort() {
-        logInfo("\n\n EXECUÇÃO ABORTADA PELO USUÁRIO! \n\n");
         pgWeb.abort();
     }
 

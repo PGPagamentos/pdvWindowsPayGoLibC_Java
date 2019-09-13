@@ -4,6 +4,7 @@ import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWOper;
 import br.com.paygo.enums.PWRet;
 import br.com.paygo.exception.InvalidReturnTypeException;
+import br.com.paygo.interop.Confirmation;
 import br.com.paygo.interop.LibFunctions;
 import br.com.paygo.interop.Transaction;
 import br.com.paygo.ui.UserInterface;
@@ -50,6 +51,8 @@ public class PGWeb {
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
+            transaction.printReceipt();
+
             userInterface.logInfo("\n\n=> VENDA CONCLUÍDA <=\n\n");
         }
     }
@@ -59,6 +62,8 @@ public class PGWeb {
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
+            transaction.printReceipt();
+
             userInterface.logInfo("\n\n=> REIMPRESSÃO CONCLUÍDA <=\n\n");
         }
     }
@@ -69,6 +74,21 @@ public class PGWeb {
 
         if (returnedCode == PWRet.OK) {
             userInterface.logInfo("\n\n=> CANCELAMENTO DE VENDA CONCLUÍDO <=\n\n");
+        }
+    }
+
+    public void checkPendingConfirmation() {
+        try {
+            transaction = new Transaction(PWOper.PNDCNF, userInterface);
+
+            Confirmation confirmation = new Confirmation(transaction);
+            confirmation.executeConfirmationProcess(true);
+
+            transaction.printReceipt();
+
+            transaction.abort();
+        } catch (Exception e) {
+            userInterface.showException(e.getMessage(), false);
         }
     }
 
@@ -99,6 +119,7 @@ public class PGWeb {
     public void abort() {
         try {
             this.transaction.abort();
+            userInterface.logInfo("\n\n EXECUÇÃO ABORTADA PELO USUÁRIO! \n\n");
         } catch (InvalidReturnTypeException e) {
             userInterface.showException(e.getMessage(), true);
         }

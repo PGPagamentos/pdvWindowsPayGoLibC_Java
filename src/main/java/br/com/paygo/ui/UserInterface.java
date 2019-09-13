@@ -12,6 +12,7 @@ public interface UserInterface {
     void sale();
     void reprint();
     void saleVoid();
+    void checkPendingConfirmation();
     void reportTrunc();
     void reportDetail();
     void abort();

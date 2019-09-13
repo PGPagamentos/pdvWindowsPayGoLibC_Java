@@ -76,7 +76,6 @@ public class UserInputHandler {
                     userInterface.alert("Digite apenas alfanuméricos");
                     break;
                 case ALL:
-                    System.out.println("aceitando numéricos, alfanuméricos e especiais");
                     return true;
             }
         }
