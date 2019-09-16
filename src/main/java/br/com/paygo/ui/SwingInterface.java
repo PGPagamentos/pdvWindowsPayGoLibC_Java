@@ -29,6 +29,7 @@ public class SwingInterface implements UserInterface {
     private final JTextArea logArea = new JTextArea();
     private final ParamPanel paramPanel = new ParamPanel();
 
+    private PinPadPanel pinPadPanel;
     private JList paramList = new JList();
     private HashMap<PWInfo, String> params = new HashMap<>();
     private DefaultListModel<String> listModel = new DefaultListModel<>();
@@ -37,6 +38,7 @@ public class SwingInterface implements UserInterface {
 
     public SwingInterface() {
         pgWeb = new PGWeb(this);
+        pinPadPanel = new PinPadPanel(pgWeb);
         logArea.setEditable(false);
         setupWindow();
         init();
@@ -171,6 +173,9 @@ public class SwingInterface implements UserInterface {
         });
 
         JButton pinPadButton = new JButton("Capturar dados usando PIN-pad");
+        pinPadButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(applicationWindow, pinPadPanel, "Capturar dados usando PIN-pad:", JOptionPane.PLAIN_MESSAGE);
+        });
 
         JPanel bottomPanel = new JPanel();
         bottomPanel.setBorder(new EmptyBorder(5, 0, 10, 0));

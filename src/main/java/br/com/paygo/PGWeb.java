@@ -1,8 +1,6 @@
 package br.com.paygo;
 
-import br.com.paygo.enums.PWInfo;
-import br.com.paygo.enums.PWOper;
-import br.com.paygo.enums.PWRet;
+import br.com.paygo.enums.*;
 import br.com.paygo.exception.InvalidReturnTypeException;
 import br.com.paygo.interop.Confirmation;
 import br.com.paygo.interop.LibFunctions;
@@ -114,6 +112,40 @@ public class PGWeb {
                 userInterface.showException("Erro ao exibir o relatório de operações", false);
             }
         }
+    }
+
+    public String requestDataOnPinPad(PWData data, PWUserDataMessage message, int minSize, int maxSize) {
+        PWRet ret;
+        String key = "12345678901234567890123456789012";
+        byte[] response = new byte[1000];
+
+        try {
+            if (minSize > maxSize) {
+                throw new Exception("Tamanho máximo deve ser maior que o tamanho mínimo!");
+            }
+
+            if (data == PWData.PPENTRY) {
+                ret = LibFunctions.getUserDataOnPINPad(message, minSize, maxSize, 30, response);
+            } else {
+                if(minSize < 4) {
+                    throw new Exception("Tamanho mínimo deve ser maior que 4!");
+                }
+
+                String promptMessage = "TESTE DE CAPTURA\nDE PIN BLOCK";
+                ret = LibFunctions.getPINBlock(key, minSize, maxSize, 30, promptMessage, response);
+            }
+
+            System.out.println("PWRet = " + ret);
+            System.out.println("response = " + new String(response));
+
+            if (ret != PWRet.OK) {
+                userInterface.showException("Erro ao solicitar dado via PIN-pad", false);
+            }
+        } catch (Exception e) {
+            userInterface.showException(e.getMessage(), false);
+        }
+
+        return new String(response);
     }
 
     public void abort() {

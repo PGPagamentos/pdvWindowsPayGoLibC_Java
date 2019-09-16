@@ -9,7 +9,7 @@ public class Menu {
     private final PWGetData getData;
     private final int size;
 
-    public Menu(PWGetData getData) {
+    Menu(PWGetData getData) {
         this.getData = getData;
         this.size = getData.getNumOpcoesMenu();
     }

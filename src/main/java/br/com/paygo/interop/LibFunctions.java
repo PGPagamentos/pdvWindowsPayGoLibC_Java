@@ -1,9 +1,6 @@
 package br.com.paygo.interop;
 
-import br.com.paygo.enums.PWCnf;
-import br.com.paygo.enums.PWInfo;
-import br.com.paygo.enums.PWOper;
-import br.com.paygo.enums.PWRet;
+import br.com.paygo.enums.*;
 import br.com.paygo.exception.InvalidReturnTypeException;
 import com.sun.jna.ptr.ShortByReference;
 
@@ -62,5 +59,13 @@ public class LibFunctions {
 
     static PWRet getPIN(short index) throws InvalidReturnTypeException {
         return PWRet.valueOf(pgWebLib.PINPadGetPIN(index));
+    }
+
+    public static PWRet getPINBlock(String key, int minLength, int maxLength, int seconds, String promptMessage, byte[] data) throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.PINPadGetPINBlock(key, minLength, maxLength, seconds, promptMessage, data));
+    }
+
+    public static PWRet getUserDataOnPINPad(PWUserDataMessage userDataMessage, int minSize, int maxSize, int timeout, byte[] value) throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.PINPadGetUserData(userDataMessage, (byte)minSize, (byte)maxSize, (short)timeout, value));
     }
 }

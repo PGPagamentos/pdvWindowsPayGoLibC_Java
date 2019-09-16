@@ -23,86 +23,91 @@ public class PGWebLib {
         this.libInterface = Native.load(libName, PGWebLibMap.class);
     }
 
-    public short init(String path) {
+    short init(String path) {
         return libInterface.PW_iInit(path);
     }
 
-    public short newTransaction(int operation) {
+    short newTransaction(int operation) {
         return libInterface.PW_iNewTransac(operation);
     }
 
-    public short addParam(int param, String paramValue) {
+    short addParam(int param, String paramValue) {
         return libInterface.PW_iAddParam(param, paramValue);
     }
 
-    public short getResult(PWInfo param, byte[] paramValue) {
+    short getResult(PWInfo param, byte[] paramValue) {
         return libInterface.PW_iGetResult(param.getValue(), paramValue, paramValue.length);
     }
 
-    public short executeTransaction(PWGetData[] getData, ShortByReference numParams) {
+    short executeTransaction(PWGetData[] getData, ShortByReference numParams) {
         return libInterface.PW_iExecTransac(getData, numParams);
     }
 
-    public short confirmTransaction(PWCnf confirmationType, String transactionLocalRef, String transactionPGWRef,
+    short confirmTransaction(PWCnf confirmationType, String transactionLocalRef, String transactionPGWRef,
                                     String transactionProviderRef, String storeId, String providerName) {
 
         return libInterface.PW_iConfirmation(confirmationType.getValue(), transactionLocalRef, transactionPGWRef,
                 transactionProviderRef, storeId, providerName);
     }
 
-    public short idleProd() {
+    short idleProd() {
         return libInterface.PW_iIdleProc();
     }
 
-    public short PINPadEventLoop(byte[] displayMessage, int displaySize) {
+    short PINPadEventLoop(byte[] displayMessage, int displaySize) {
         return libInterface.PW_iPPEventLoop(displayMessage, displaySize);
     }
 
-    public short PINPadAbort() {
+    short PINPadAbort() {
         return libInterface.PW_iPPAbort();
     }
 
-    public short PINPadGetCard(short index) {
+    short PINPadGetCard(short index) {
         return libInterface.PW_iPPGetCard(index);
     }
 
-    public short PINPadRemoveCard() {
+    short PINPadRemoveCard() {
         return libInterface.PW_iPPRemoveCard();
     }
 
-    public short PINPadGetPIN(short index) {
+    short PINPadGetPIN(short index) {
         return libInterface.PW_iPPGetPIN(index);
     }
 
-    public short PINPadGetData(short index) {
+    short PINPadGetPINBlock(String key, int minLength, int maxLength, int seconds, String promptMessage, byte[] data) {
+        return libInterface.PW_iPPGetPINBlock((byte) 12, key, (byte)minLength, (byte)maxLength, (short)seconds, promptMessage, data);
+    }
+
+    short PINPadGetData(short index) {
         return libInterface.PW_iPPGetData(index);
     }
 
-    public short PINPadGetUserData(PWUserDataMessage userDataMessage, byte minLength, byte maxLength, short timeout, String value) {
-        return libInterface.PW_iPPGetUserData((short)userDataMessage.ordinal(), minLength, maxLength, timeout, value);
+    short PINPadGetUserData(PWUserDataMessage userDataMessage, byte minLength, byte maxLength, short timeout, byte[] value) {
+        short userDataCode = (short) (userDataMessage.ordinal() + 1);
+        return libInterface.PW_iPPGetUserData(userDataCode, minLength, maxLength, timeout, value);
     }
 
-    public short PINPadChipCardOfflineProcessing(short index) {
+    short PINPadChipCardOfflineProcessing(short index) {
         return libInterface.PW_iPPGoOnChip(index);
     }
 
-    public short PINPadChipCardFinishOfflineProcessing(short index) {
+    short PINPadChipCardFinishOfflineProcessing(short index) {
         return libInterface.PW_iPPFinishChip(index);
     }
 
-    public short PINPadRequestConfirmation(short index) {
+    short PINPadRequestConfirmation(short index) {
         return libInterface.PW_iPPConfirmData(index);
     }
 
-    public short PINPadConfirmData(short index) {
+    short PINPadConfirmData(short index) {
         return libInterface.PW_iPPDataConfirmation(index);
     }
 
-    public short PINPadGenericCommand(short index) {
+    short PINPadGenericCommand(short index) {
         return libInterface.PW_iPPGenericCMD(index);
     }
 
-    public short PINPadShowMessage(String message) {
+    short PINPadShowMessage(String message) {
         return libInterface.PW_iPPDisplay(message);
     }
 

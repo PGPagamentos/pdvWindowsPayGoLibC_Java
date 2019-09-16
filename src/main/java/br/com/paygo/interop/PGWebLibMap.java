@@ -20,8 +20,9 @@ public interface PGWebLibMap extends Library {
     short PW_iPPGetCard(short index);
     short PW_iPPRemoveCard();
     short PW_iPPGetPIN(short index);
+    short PW_iPPGetPINBlock(byte keyId, String key, byte minLength, byte maxLength, short seconds, String promptMessage, byte[] data);
     short PW_iPPGetData(short index);
-    short PW_iPPGetUserData(short userDataMessage, byte minLength, byte maxLength, short timeout, String value);
+    short PW_iPPGetUserData(short userDataMessage, byte minLength, byte maxLength, short timeout, byte[] value);
     short PW_iPPGoOnChip(short index);
     short PW_iPPFinishChip(short index);
     short PW_iPPConfirmData(short index);

@@ -228,7 +228,7 @@ public class Transaction {
                         executeEventLoop();
                         break;
                     case PPENCPIN:
-                        userInterface.logInfo("=> PW_iPPFinishChip: " + LibFunctions.getPIN(index));
+                        userInterface.logInfo("=> PW_iPPGetPIN: " + LibFunctions.getPIN(index));
                         executeEventLoop();
                 }
             }

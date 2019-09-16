@@ -1,7 +1,9 @@
 package br.com.paygo.ui;
 
 import br.com.paygo.PGWeb;
+import br.com.paygo.enums.PWData;
 import br.com.paygo.enums.PWInfo;
+import br.com.paygo.enums.PWUserDataMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,8 +16,7 @@ public class CMDInterface implements UserInterface {
     public CMDInterface() {
         this.pgWeb = new PGWeb(this);
         init();
-        //sale();
-        checkPendingConfirmation();
+        pgWeb.requestDataOnPinPad(PWData.PPENTRY, PWUserDataMessage.DIGITE_O_CPF, 1, 12);
     }
 
     @Override
