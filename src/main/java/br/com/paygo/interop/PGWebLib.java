@@ -5,6 +5,7 @@ import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWUserDataMessage;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
+import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.ShortByReference;
 
 public class PGWebLib {
@@ -107,11 +108,9 @@ public class PGWebLib {
         return libInterface.PW_iPPGenericCMD(index);
     }
 
-    short PINPadShowMessage(String message) {
+    public short PINPadShowMessage(String message) {
         return libInterface.PW_iPPDisplay(message);
     }
 
-//    short PINPadWaitForEvent() {
-//        return libInterface.PW_iPPWaitEvent();
-//    }
+    public short PINPadWaitEvent(LongByReference event) { return  libInterface. PW_iPPWaitEvent(event); }
 }

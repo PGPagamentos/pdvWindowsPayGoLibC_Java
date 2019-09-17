@@ -10,6 +10,7 @@ public interface UserInterface {
     void version();
     void install();
     void sale();
+    void saleOnPINPad();
     void reprint();
     void saleVoid();
     void checkPendingConfirmation();

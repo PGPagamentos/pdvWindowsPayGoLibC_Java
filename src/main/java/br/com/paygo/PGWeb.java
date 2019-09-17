@@ -55,6 +55,25 @@ public class PGWeb {
         }
     }
 
+    public void saleOnPINPad() {
+        try {
+            transaction = new Transaction(PWOper.SALE, userInterface);
+            PWRet returnedCode = transaction.initInteractionOnPINPad();
+
+            if(returnedCode == PWRet.OK) {
+                returnedCode = transaction.executeOperation();
+
+                if (returnedCode == PWRet.OK) {
+                    transaction.printReceipt();
+
+                    userInterface.logInfo("\n\n=> AUTO ATENDIMENTO CONCLUÍDO <=\n\n");
+                }
+            }
+        } catch (Exception e) {
+            userInterface.showException(e.getMessage(), true);
+        }
+    }
+
     public void reprint() {
         transaction = new Transaction(PWOper.REPRINT, userInterface);
         PWRet returnedCode = transaction.executeOperation();
@@ -134,9 +153,6 @@ public class PGWeb {
                 String promptMessage = "TESTE DE CAPTURA\nDE PIN BLOCK";
                 ret = LibFunctions.getPINBlock(key, minSize, maxSize, 30, promptMessage, response);
             }
-
-            System.out.println("PWRet = " + ret);
-            System.out.println("response = " + new String(response));
 
             if (ret != PWRet.OK) {
                 userInterface.showException("Erro ao solicitar dado via PIN-pad", false);

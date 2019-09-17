@@ -245,6 +245,11 @@ public class SwingInterface implements UserInterface {
     }
 
     @Override
+    public void saleOnPINPad() {
+        pgWeb.saleOnPINPad();
+    }
+
+    @Override
     public void reprint() {
         pgWeb.reprint();
     }

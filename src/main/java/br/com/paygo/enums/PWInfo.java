@@ -101,7 +101,8 @@ public enum PWInfo {
     CARDLASTDIGITS(224),    // 4 últimos dígitos do cartão
     CARDSECCODE(199),       // código de segurança do cartão
     PPPASSW(221),           // senha do cartão informada no PIN-pad
-    CNFCANCELREQ(45);       // Confirmação de cancelamento: 0: confirma; 1: cancela.
+    CNFCANCELREQ(45),       // Confirmação de cancelamento: 0: confirma; 1: cancela.
+    XXX(135);               // Parâmetro requisitado no auto atendimento para definir...
 
     private final int value;
 

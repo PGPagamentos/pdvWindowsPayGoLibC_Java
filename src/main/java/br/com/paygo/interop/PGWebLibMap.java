@@ -1,6 +1,7 @@
 package br.com.paygo.interop;
 
 import com.sun.jna.Library;
+import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.ShortByReference;
 
 public interface PGWebLibMap extends Library {
@@ -30,6 +31,6 @@ public interface PGWebLibMap extends Library {
     short PW_iPPGenericCMD(short index);
 
     short PW_iPPDisplay(String message);
-    short PW_iPPWaitEvent(); // VERIFICAR - não implementado nas outras aplicações
+    short PW_iPPWaitEvent(LongByReference event);
     short PW_iPPPositiveConfirmation(short index); // VERIFICAR - não implementado nas outras aplicações
 }

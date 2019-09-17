@@ -1,14 +1,12 @@
 package br.com.paygo.interop;
 
-import br.com.paygo.enums.PWInfo;
-import br.com.paygo.enums.PWOper;
-import br.com.paygo.enums.PWRet;
-import br.com.paygo.enums.PWValidDataEntry;
+import br.com.paygo.enums.*;
 import br.com.paygo.exception.InvalidReturnTypeException;
 import br.com.paygo.exception.MandatoryParamException;
 import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.helper.UserInputHandler;
 import br.com.paygo.ui.UserInterface;
+import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.ShortByReference;
 
 import java.util.Arrays;
@@ -31,6 +29,7 @@ public class Transaction {
         put(PWInfo.CURREXP, "2");
     }};
 
+    private boolean selfService = false;
     private final UserInterface userInterface;
     private final ShortByReference numParams;
     private PWOper operation;
@@ -83,6 +82,73 @@ public class Transaction {
             userInterface.showException(e.getMessage(), true);
             return PWRet.INTERNALERR;
         }
+    }
+
+    public PWRet initInteractionOnPINPad() throws Exception {
+        PINPad pinPad = PINPad.getInstance();
+        LongByReference event = new LongByReference(0);
+        int eventResponse = 0;
+        PWRet ret;
+
+        ret = pinPad.displayMessage("INSIRA OU PASSE O CARTAO");
+
+        if (ret != PWRet.OK) {
+            userInterface.showException("Erro ao exibir mensagem no PIN-pad.", false);
+            return PWRet.PINPADERR;
+        }
+
+        do {
+            ret = LibFunctions.eventLoop(this.displayMessage);
+
+            if (ret == PWRet.DISPLAY) {
+                System.out.println(this.getValue(false));
+            }
+
+            if (ret == PWRet.TIMEOUT) {
+                userInterface.showException("Timeout!", false);
+                return PWRet.TIMEOUT;
+            }
+        } while (ret != PWRet.OK);
+
+        ret = LibFunctions.waitEventOnPINPad(event);
+
+        if (ret != PWRet.OK) {
+            userInterface.showException("Erro no wait event do PIN_pad", false);
+            return PWRet.PINPADERR;
+        }
+
+        do {
+            ret = LibFunctions.eventLoop(this.displayMessage);
+
+            if (ret == PWRet.DISPLAY) {
+                System.out.println(this.getValue(false));
+            }
+
+            if (ret == PWRet.TIMEOUT) {
+                return PWRet.TIMEOUT;
+            }
+
+            if (ret == PWRet.OK) {
+                eventResponse = (int)event.getValue();
+
+                if(eventResponse == PWPINPadInput.KEYCANC.getValue()) {
+                    this.abort();
+                    return PWRet.CANCEL;
+                }
+            }
+        } while(!Arrays.asList(PWPINPadInput.MAGSTRIPE.getValue(), PWPINPadInput.ICC.getValue(), PWPINPadInput.CTLS.getValue()).contains(eventResponse));
+
+        ret = LibFunctions.showMessageOnPINPad("PROCESSANDO...");
+
+        if (ret != PWRet.OK) {
+            userInterface.showException("Erro ao exibir mensagem no PIN-pad.", false);
+            return PWRet.PINPADERR;
+        }
+
+        this.selfService = true;
+        this.addParam(PWInfo.TOTAMNT, "100");
+
+        return PWRet.OK;
     }
 
     public PWRet getResult(PWInfo param) throws InvalidReturnTypeException {
@@ -178,10 +244,26 @@ public class Transaction {
             } else {
                 switch (pwGetData.getTipoDeDado()) {
                     case MENU:
-                        Menu menu = new Menu(pwGetData);
-                        String optionSelected = UserInputHandler.requestSelectionFromMenu(userInterface, menu);
+                        String optionSelected;
 
-                        this.addParam(identifier, optionSelected);
+                        if (this.selfService) {
+                            if (pwGetData.getNumOpcoesMenu() > 3) {
+                                userInterface.showException("Tamanho do menu é muito grande", false);
+                            } else {
+                                PINPad pinPad = PINPad.getInstance();
+                                try {
+                                    optionSelected = String.valueOf(pinPad.getMenuSelection(pwGetData.getMenu(), pwGetData.getNumOpcoesMenu(), this.displayMessage));
+                                    this.addParam(identifier, optionSelected);
+                                } catch (Exception e) {
+                                    userInterface.showException(e.getMessage(), false);
+                                }
+
+                            }
+                        } else {
+                            Menu menu = new Menu(pwGetData);
+                            optionSelected = UserInputHandler.requestSelectionFromMenu(userInterface, menu);
+                            this.addParam(identifier, optionSelected);
+                        }
                         break;
                     case USERAUTH:
                         String password = UserInputHandler.getTypedData(userInterface, "Digite a senha:",

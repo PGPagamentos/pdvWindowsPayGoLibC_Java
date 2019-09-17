@@ -5,7 +5,7 @@ import br.com.paygo.exception.InvalidReturnTypeException;
 import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.ui.UserInterface;
 
-class EventLoop {
+public class EventLoop {
 
     static PWRet execute(UserInterface userInterface, byte[] displayMessage) throws InvalidReturnTypeException {
         PWRet eventLoopResponse;
@@ -18,7 +18,7 @@ class EventLoop {
                 userInterface.logInfo("\n\n" + message + "\n\n");
             }
 
-            if(eventLoopResponse == PWRet.CANCEL) {
+            if(eventLoopResponse == PWRet.CANCEL || eventLoopResponse == PWRet.TIMEOUT) {
                 break;
             }
         } while (eventLoopResponse != PWRet.OK);

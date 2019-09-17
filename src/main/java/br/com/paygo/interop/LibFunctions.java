@@ -2,6 +2,7 @@ package br.com.paygo.interop;
 
 import br.com.paygo.enums.*;
 import br.com.paygo.exception.InvalidReturnTypeException;
+import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.ShortByReference;
 
 import java.util.LinkedList;
@@ -68,4 +69,13 @@ public class LibFunctions {
     public static PWRet getUserDataOnPINPad(PWUserDataMessage userDataMessage, int minSize, int maxSize, int timeout, byte[] value) throws InvalidReturnTypeException {
         return PWRet.valueOf(pgWebLib.PINPadGetUserData(userDataMessage, (byte)minSize, (byte)maxSize, (short)timeout, value));
     }
+
+    public static PWRet showMessageOnPINPad(String message) throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.PINPadShowMessage(message));
+    }
+
+    public static PWRet waitEventOnPINPad(LongByReference event) throws InvalidReturnTypeException {
+        return PWRet.valueOf(pgWebLib.PINPadWaitEvent(event));
+    }
+
 }
