@@ -24,6 +24,7 @@ public class SwingInterface implements UserInterface {
         put(PWOper.PNDCNF, "Verifica Confirmação Pendente");
         put(PWOper.RPTTRUNC, "Relatório Sintético");
         put(PWOper.RPTDETAIL, "Relatório Detalhado");
+        put(PWOper.SELFSERV, "Autoatendimento");
     }};
     private final JFrame applicationWindow = new JFrame();
     private final JTextArea logArea = new JTextArea();
@@ -166,6 +167,9 @@ public class SwingInterface implements UserInterface {
                     break;
                 case RPTDETAIL:
                     reportDetail();
+                    break;
+                case SELFSERV:
+                    saleOnPINPad();
                     break;
                 default:
                     showException("Operação não encontrada!", false);

@@ -118,6 +118,8 @@ public class Transaction {
         }
 
         do {
+            Thread.sleep(500);
+
             ret = LibFunctions.eventLoop(this.displayMessage);
 
             if (ret == PWRet.DISPLAY) {
@@ -136,9 +138,9 @@ public class Transaction {
                     return PWRet.CANCEL;
                 }
             }
-        } while(!Arrays.asList(PWPINPadInput.MAGSTRIPE.getValue(), PWPINPadInput.ICC.getValue(), PWPINPadInput.CTLS.getValue()).contains(eventResponse));
+        } while (!Arrays.asList(PWPINPadInput.MAGSTRIPE.getValue(), PWPINPadInput.ICC.getValue(), PWPINPadInput.CTLS.getValue()).contains(eventResponse));
 
-        ret = LibFunctions.showMessageOnPINPad("PROCESSANDO...");
+        ret = pinPad.displayMessage("PROCESSANDO...");
 
         if (ret != PWRet.OK) {
             userInterface.showException("Erro ao exibir mensagem no PIN-pad.", false);
@@ -146,7 +148,6 @@ public class Transaction {
         }
 
         this.selfService = true;
-        this.addParam(PWInfo.TOTAMNT, "100");
 
         return PWRet.OK;
     }
@@ -248,16 +249,16 @@ public class Transaction {
 
                         if (this.selfService) {
                             if (pwGetData.getNumOpcoesMenu() > 3) {
-                                userInterface.showException("Tamanho do menu é muito grande", false);
+                                userInterface.showException("Tamanho do menu é muito grande", true);
+                                this.abort();
                             } else {
                                 PINPad pinPad = PINPad.getInstance();
                                 try {
-                                    optionSelected = String.valueOf(pinPad.getMenuSelection(pwGetData.getMenu(), pwGetData.getNumOpcoesMenu(), this.displayMessage));
+                                    optionSelected = pinPad.getMenuSelection(pwGetData.getMenu(), pwGetData.getNumOpcoesMenu(), this.displayMessage);
                                     this.addParam(identifier, optionSelected);
                                 } catch (Exception e) {
-                                    userInterface.showException(e.getMessage(), false);
+                                    userInterface.showException(e.getMessage(), true);
                                 }
-
                             }
                         } else {
                             Menu menu = new Menu(pwGetData);
@@ -271,10 +272,16 @@ public class Transaction {
                         this.addParam(identifier, password);
                         break;
                     case TYPED:
-                        String typedData = UserInputHandler.getTypedData(userInterface, pwGetData.getPrompt(),
-                                pwGetData.getTamanhoMaximo(), pwGetData.getTamanhoMinimo(),
-                                pwGetData.getTipoEntradaPermitido(), pwGetData.getValorInicial(),
-                                pwGetData.getMascaraDeCaptura());
+                        String typedData;
+
+                        if (identifier == PWInfo.TOTAMNT && selfService) {
+                            typedData = "100";
+                        } else {
+                            typedData = UserInputHandler.getTypedData(userInterface, pwGetData.getPrompt(),
+                                    pwGetData.getTamanhoMaximo(), pwGetData.getTamanhoMinimo(),
+                                    pwGetData.getTipoEntradaPermitido(), pwGetData.getValorInicial(),
+                                    pwGetData.getMascaraDeCaptura());
+                        }
 
                         this.addParam(identifier, typedData);
                         break;

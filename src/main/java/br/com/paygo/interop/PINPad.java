@@ -11,18 +11,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class PINPad {
+class PINPad {
 
     private static final PINPad INSTANCE = new PINPad();
     private Map<String, String> pinPadMenu = new LinkedHashMap<>();
 
     private PINPad() {}
 
-    public static PINPad getInstance() {
+    static PINPad getInstance() {
         return INSTANCE;
     }
 
-    public String getMenuSelection(PWMenu menu, int numOptions, byte[] displayMessage) throws Exception {
+    String getMenuSelection(PWMenu menu, int numOptions, byte[] displayMessage) throws Exception {
         pinPadMenu = new LinkedHashMap<>();
         Field[] menuFields = menu.getDeclaredFields();
 
@@ -40,7 +40,7 @@ public class PINPad {
         return this.getInput(displayMessage);
     }
 
-    public PWRet displayMessage(String message) {
+    PWRet displayMessage(String message) {
         try {
             PWRet ret = LibFunctions.showMessageOnPINPad(message);
 
@@ -54,27 +54,21 @@ public class PINPad {
         }
     }
 
-    private PWRet displayMenu() {
+    private void displayMenu() throws InvalidReturnTypeException {
         StringBuilder formattedMenu = new StringBuilder();
 
         for(Map.Entry<String, String> entry : pinPadMenu.entrySet()) {
-            formattedMenu.append(" " + entry.getValue() + " ");
+            formattedMenu.append(" ").append(entry.getValue()).append(" ");
         }
 
-        try {
-            PWRet ret = LibFunctions.showMessageOnPINPad(formattedMenu.toString());
+        PWRet ret = LibFunctions.showMessageOnPINPad(formattedMenu.toString());
 
-            if (ret != PWRet.OK) {
-                return PWRet.PINPADERR;
-            }
-
-            return ret;
-        } catch (InvalidReturnTypeException e) {
-            return PWRet.PINPADERR;
+        if (ret != PWRet.OK) {
+            throw new InvalidReturnTypeException("Erro ao exibir mensagem no PIN-pad = " + PWRet.PINPADERR);
         }
     }
 
-    public String getInput(byte[] displayMessage) throws Exception {
+    private String getInput(byte[] displayMessage) throws Exception {
         LongByReference event = new LongByReference(1);
         List<String> opcoesMenu = new LinkedList<>(pinPadMenu.keySet());
 
@@ -116,6 +110,6 @@ public class PINPad {
                 }
 
             }
-        } while(true);
+        } while (true);
     }
 }

@@ -35,7 +35,9 @@ public enum PWOper {
     CONFIG(253),     // (Configuração) Visualiza e altera os parâmetros de operação locais da biblioteca
     MAINTENANCE(254),// (Manutenção) Apaga todas as configurações do Ponto de Captura), devendo ser novamente realizada uma transação de Instalação.
 
-    PNDCNF(0);      // (Confirmação)
+    // Adicionados para exibição no menu da interface gráfica
+    PNDCNF(3),      // (Confirmação) Verifica se existe alguma transação pendente
+    SELFSERV(4);    // (Venda) Auto atendimento para realização de uma venda
 
     private final int value;
 
