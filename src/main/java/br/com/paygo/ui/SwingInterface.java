@@ -18,6 +18,7 @@ public class SwingInterface implements UserInterface {
     private final Map<PWOper, String> operations = new LinkedHashMap<PWOper, String>() {{
         put(PWOper.VERSION, "Versão da DLL");
         put(PWOper.INSTALL, "Instalação");
+        put(PWOper.ADMIN, "Administrativo");
         put(PWOper.SALE, "Venda");
         put(PWOper.REPRINT, "Reimpressão");
         put(PWOper.SALEVOID, "Cancelamento de Venda");
@@ -150,6 +151,9 @@ public class SwingInterface implements UserInterface {
                 case VERSION:
                     version();
                     break;
+                case ADMIN:
+                    adm();
+                    break;
                 case SALE:
                     sale();
                     break;
@@ -241,6 +245,11 @@ public class SwingInterface implements UserInterface {
     @Override
     public void install() {
         pgWeb.install();
+    }
+
+    @Override
+    public void adm() {
+        pgWeb.admin();
     }
 
     @Override

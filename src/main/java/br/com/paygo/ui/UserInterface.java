@@ -9,6 +9,7 @@ public interface UserInterface {
     void init();
     void version();
     void install();
+    void adm();
     void sale();
     void saleOnPINPad();
     void reprint();

@@ -14,7 +14,6 @@ public class CMDInterface implements UserInterface {
     public CMDInterface() {
         this.pgWeb = new PGWeb(this);
         init();
-        saleOnPINPad();
     }
 
     @Override
@@ -30,6 +29,11 @@ public class CMDInterface implements UserInterface {
     @Override
     public void install() {
         pgWeb.install();
+    }
+
+    @Override
+    public void adm() {
+        pgWeb.admin();
     }
 
     @Override

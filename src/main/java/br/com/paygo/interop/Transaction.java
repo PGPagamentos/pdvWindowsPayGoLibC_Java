@@ -50,6 +50,7 @@ public class Transaction {
 
     public PWRet executeOperation() {
         PWRet returnedCode;
+        boolean abort = false;
 
         try {
             returnedCode = this.start();
@@ -60,11 +61,17 @@ public class Transaction {
                     userInterface.logInfo("=> PW_iExecTransac: " + returnedCode);
 
                     if (returnedCode == PWRet.MOREDATA) {
-                        this.retrieveMoreData();
+                        if (this.retrieveMoreData() == PWRet.CANCEL) {
+                            abort = true;
+                        }
                     }
-                } while (returnedCode == PWRet.MOREDATA);
+                } while (returnedCode == PWRet.MOREDATA && !abort);
 
-                if (returnedCode == PWRet.OK) {
+                if(abort) {
+                    this.abort();
+                    userInterface.showException("Transação abortada", false);
+                    return PWRet.CANCEL;
+                } else if (returnedCode == PWRet.OK) {
                     this.finalizeTransaction();
 
                     this.getResult(PWInfo.RESULTMSG);
@@ -230,7 +237,7 @@ public class Transaction {
         return LibFunctions.executeTransaction(getData, numParams);
     }
 
-    private void retrieveMoreData() throws InvalidReturnTypeException {
+    private PWRet retrieveMoreData() throws InvalidReturnTypeException {
         System.out.println("\nParam size: " + this.numParams.getValue());
 
         for (short index = 0; index < this.numParams.getValue(); index++) {
@@ -250,14 +257,15 @@ public class Transaction {
                         if (this.selfService) {
                             if (pwGetData.getNumOpcoesMenu() > 3) {
                                 userInterface.showException("Tamanho do menu é muito grande", true);
-                                this.abort();
+                                return PWRet.CANCEL;
                             } else {
                                 PINPad pinPad = PINPad.getInstance();
                                 try {
                                     optionSelected = pinPad.getMenuSelection(pwGetData.getMenu(), pwGetData.getNumOpcoesMenu(), this.displayMessage);
                                     this.addParam(identifier, optionSelected);
                                 } catch (Exception e) {
-                                    userInterface.showException(e.getMessage(), true);
+                                    userInterface.showException(e.getMessage(), false);
+                                    return PWRet.CANCEL;
                                 }
                             }
                         } else {
@@ -325,6 +333,8 @@ public class Transaction {
 
         userInterface.logInfo("\n=> PW_iGetResult: " + this.getResult(PWInfo.STATUS) +
                 "\nSTATUS: " + this.getValue(true));
+
+        return PWRet.OK;
     }
 
     private void handleUnexpectedReturnCode(PWRet returnedCode) {

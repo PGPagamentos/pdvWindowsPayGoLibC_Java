@@ -44,6 +44,15 @@ public class PGWeb {
         }
     }
 
+    public void admin() {
+        transaction = new Transaction(PWOper.ADMIN, userInterface);
+        PWRet returnedCode = transaction.executeOperation();
+
+        if (returnedCode == PWRet.OK) {
+            userInterface.logInfo("\n\n=> ADMINISTRATIVO CONCLUÍDO <=\n\n");
+        }
+    }
+
     public void sale() {
         transaction = new Transaction(PWOper.SALE, userInterface);
         PWRet returnedCode = transaction.executeOperation();
@@ -68,6 +77,8 @@ public class PGWeb {
 
                     userInterface.logInfo("\n\n=> AUTO ATENDIMENTO CONCLUÍDO <=\n\n");
                 }
+            } else {
+                userInterface.logInfo("\n\n=> AUTO ATENDIMENTO ABORTADO <=\n\n");
             }
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), true);
