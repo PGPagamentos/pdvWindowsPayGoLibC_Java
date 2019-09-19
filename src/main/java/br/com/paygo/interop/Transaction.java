@@ -18,7 +18,7 @@ public class Transaction {
 
     private static final Map<PWInfo, String> mandatoryParams = new HashMap<PWInfo, String>() {{
         put(PWInfo.AUTDEV, "AUTOMACAO DE SISTEMAS");
-        put(PWInfo.AUTVER, "2.0.1");
+        put(PWInfo.AUTVER, ApplicationProperties.INSTANCE.getAppVersion());
         put(PWInfo.AUTNAME, "PGWEBLIBTEST");
         put(PWInfo.AUTCAP, "28");
         put(PWInfo.AUTHTECHUSER, "PAYGOTESTE");
@@ -79,7 +79,7 @@ public class Transaction {
                     handleUnexpectedReturnCode(returnedCode);
                 }
             } else {
-                PWRet resultCode = this.getResult(PWInfo.RESULTMSG);
+                this.getResult(PWInfo.RESULTMSG);
             }
 
             return returnedCode;
@@ -157,14 +157,12 @@ public class Transaction {
         return PWRet.OK;
     }
 
-    public PWRet getResult(PWInfo param) throws InvalidReturnTypeException {
+    public void getResult(PWInfo param) throws InvalidReturnTypeException {
         PWRet resultCode = LibFunctions.getResult(param, value);
         userInterface.logInfo("=> PW_iGetResult: " + resultCode + "\n\t" + this.getValue(true));
-
-        return resultCode;
     }
 
-    public PWRet abort() throws InvalidReturnTypeException {
+    public void abort() throws InvalidReturnTypeException {
         PWRet abort = LibFunctions.abortTransaction();
 
         this.getResult(PWInfo.STATUS);
@@ -173,8 +171,6 @@ public class Transaction {
             userInterface.showException("Transação abortada", false);
             System.out.println("--------- OPERAÇÃO CANCELADA ---------");
         }
-
-        return abort;
     }
 
     public void printReceipt() {
@@ -378,7 +374,7 @@ public class Transaction {
                     userInterface.showException("Tempo limite excedido", false);
                     break;
                 default:
-                    PWRet resultCode = this.getResult(PWInfo.RESULTMSG);
+                    this.getResult(PWInfo.RESULTMSG);
             }
         } catch (InvalidReturnTypeException e) {
             userInterface.showException(e.getMessage(), false);

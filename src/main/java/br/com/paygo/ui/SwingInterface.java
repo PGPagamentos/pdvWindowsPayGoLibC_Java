@@ -1,6 +1,7 @@
 package br.com.paygo.ui;
 
 import br.com.paygo.PGWeb;
+import br.com.paygo.enums.ApplicationProperties;
 import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWOper;
 
@@ -48,9 +49,11 @@ public class SwingInterface implements UserInterface {
     }
 
     private void setDefaultParams() {
+        String appVersion = ApplicationProperties.INSTANCE.getAppVersion();
+
         String listElement = PWInfo.AUTDEV + "(" + PWInfo.AUTDEV.getValue() + "): " + "AUTOMACAO DE SISTEMAS";
         listModel.addElement(listElement);
-        listElement = PWInfo.AUTVER + "(" + PWInfo.AUTVER.getValue() + "): " + "2.0.1";
+        listElement = PWInfo.AUTVER + "(" + PWInfo.AUTVER.getValue() + "): " + appVersion;
         listModel.addElement(listElement);
         listElement = PWInfo.AUTNAME + "(" + PWInfo.AUTNAME.getValue() + "): " + "PGWEBLIBTEST";
         listModel.addElement(listElement);
@@ -58,7 +61,7 @@ public class SwingInterface implements UserInterface {
         listModel.addElement(listElement);
 
         params.put(PWInfo.AUTDEV, "AUTOMACAO DE SISTEMAS");
-        params.put(PWInfo.AUTVER, "2.0.1");
+        params.put(PWInfo.AUTVER, appVersion);
         params.put(PWInfo.AUTNAME, "PGWEBLIBTEST");
         params.put(PWInfo.AUTCAP, "28");
     }
