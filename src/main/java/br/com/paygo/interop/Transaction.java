@@ -18,9 +18,9 @@ public class Transaction {
 
     private static final Map<PWInfo, String> mandatoryParams = new HashMap<PWInfo, String>() {{
         put(PWInfo.AUTDEV, "AUTOMACAO DE SISTEMAS");
-        put(PWInfo.AUTVER, "1.2");
+        put(PWInfo.AUTVER, "2.0.1");
         put(PWInfo.AUTNAME, "PGWEBLIBTEST");
-        put(PWInfo.AUTCAP, "15");
+        put(PWInfo.AUTCAP, "28");
         put(PWInfo.AUTHTECHUSER, "PAYGOTESTE");
     }};
 
@@ -69,7 +69,6 @@ public class Transaction {
 
                 if(abort) {
                     this.abort();
-                    userInterface.showException("Transação abortada", false);
                     return PWRet.CANCEL;
                 } else if (returnedCode == PWRet.OK) {
                     this.finalizeTransaction();
@@ -81,7 +80,6 @@ public class Transaction {
                 }
             } else {
                 PWRet resultCode = this.getResult(PWInfo.RESULTMSG);
-                userInterface.logInfo("=> PW_iGetResult: " + resultCode + "\n\t" + this.getValue(true));
             }
 
             return returnedCode;
@@ -160,20 +158,29 @@ public class Transaction {
     }
 
     public PWRet getResult(PWInfo param) throws InvalidReturnTypeException {
-        return LibFunctions.getResult(param, value);
+        PWRet resultCode = LibFunctions.getResult(param, value);
+        userInterface.logInfo("=> PW_iGetResult: " + resultCode + "\n\t" + this.getValue(true));
+
+        return resultCode;
     }
 
     public PWRet abort() throws InvalidReturnTypeException {
-        return LibFunctions.abortTransaction();
+        PWRet abort = LibFunctions.abortTransaction();
+
+        this.getResult(PWInfo.STATUS);
+
+        if (abort == PWRet.OK) {
+            userInterface.showException("Transação abortada", false);
+            System.out.println("--------- OPERAÇÃO CANCELADA ---------");
+        }
+
+        return abort;
     }
 
     public void printReceipt() {
         try {
             this.getResult(PWInfo.RCPTMERCH);
-            userInterface.logInfo("\t" + this.getValue(false) + "\n\n");
-
             this.getResult(PWInfo.RCPTCHOLDER);
-            userInterface.logInfo("\t" + this.getValue(false) + "\n\n");
         } catch (InvalidReturnTypeException e) {
             userInterface.showException(e.getMessage(), false);
         }
@@ -271,6 +278,11 @@ public class Transaction {
                         } else {
                             Menu menu = new Menu(pwGetData);
                             optionSelected = UserInputHandler.requestSelectionFromMenu(userInterface, menu);
+
+                            if(optionSelected.equals("-1")) {
+                                return PWRet.CANCEL;
+                            }
+
                             this.addParam(identifier, optionSelected);
                         }
                         break;
@@ -291,6 +303,10 @@ public class Transaction {
                                     pwGetData.getMascaraDeCaptura());
                         }
 
+                        if (typedData.equals("-1")) {
+                           return PWRet.CANCEL;
+                        }
+
                         this.addParam(identifier, typedData);
                         break;
                     case PPREMCRD:
@@ -309,7 +325,7 @@ public class Transaction {
                                     16, PWValidDataEntry.NUMERIC);
 
                             this.addParam(PWInfo.CARDFULLPAN, cardNumber);
-                            userInterface.logInfo("=> PW_iGetResult: " + this.getResult(PWInfo.CARDFULLPAN));
+                            this.getResult(PWInfo.CARDFULLPAN);
                         } else { // pin-pad
                             userInterface.logInfo("CAPTURA DE DADOS DO PIN-PAD");
                             userInterface.logInfo("=> PW_iPPGetCard: " + LibFunctions.getCardFromPINPad(index));
@@ -330,9 +346,6 @@ public class Transaction {
                 }
             }
         }
-
-        userInterface.logInfo("\n=> PW_iGetResult: " + this.getResult(PWInfo.STATUS) +
-                "\nSTATUS: " + this.getValue(true));
 
         return PWRet.OK;
     }
@@ -366,7 +379,6 @@ public class Transaction {
                     break;
                 default:
                     PWRet resultCode = this.getResult(PWInfo.RESULTMSG);
-                    userInterface.logInfo("=> PW_iGetResult: " + resultCode + "\n\t" + this.getValue(true));
             }
         } catch (InvalidReturnTypeException e) {
             userInterface.showException(e.getMessage(), false);
@@ -377,9 +389,7 @@ public class Transaction {
         PWRet eventLoopResponse = EventLoop.execute(userInterface, this.displayMessage);
 
         if (eventLoopResponse == PWRet.CANCEL) {
-            if (this.abort() == PWRet.OK) {
-                System.out.println("--------- OPERAÇÃO CANCELADA ---------");
-            }
+            this.abort();
         }
     }
 

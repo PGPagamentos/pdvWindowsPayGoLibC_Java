@@ -38,26 +38,22 @@ public class Confirmation {
     }
 
     public PWRet executeConfirmationProcess(boolean pendingTransaction) throws InvalidReturnTypeException {
-        PWCnf confirmationType;
-
-        if (!pendingTransaction && !confirmationParams.isEmpty()) {
-            confirmationType = PWCnf.AUTO;
-        } else {
+        if (pendingTransaction) {
             transaction.getUserInterface().logInfo("\n======== CONFIRMAÇÃO PENDENTE ========");
+        }
 
-            confirmationType = retrieveConfirmationType();
-            int actionSelected = retrieveAction();
+        PWCnf confirmationType = retrieveConfirmationType();
+        int actionSelected = retrieveAction();
 
-            if (actionSelected == 0) {
-                if(confirmationParams.isEmpty()) {
-                    transaction.getUserInterface().showException("Não é possível buscar automaticamente os dados da transação pendente neste contexto.", false);
-                    return PWRet.FROMHOSTTRNNFOUND;
-                } else {
-                    getConfirmationData();
-                }
+        if (actionSelected == 0) {
+            if(confirmationParams.isEmpty()) {
+                transaction.getUserInterface().showException("Não é possível buscar automaticamente os dados da transação pendente neste contexto.", false);
+                return PWRet.FROMHOSTTRNNFOUND;
             } else {
-                retrieveConfirmationData();
+                getConfirmationData();
             }
+        } else {
+            retrieveConfirmationData();
         }
 
         return LibFunctions.confirmTransaction(confirmationType, new LinkedList<>(confirmationParams.values()));

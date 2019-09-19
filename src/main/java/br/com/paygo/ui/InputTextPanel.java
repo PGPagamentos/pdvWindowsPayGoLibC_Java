@@ -3,7 +3,6 @@ package br.com.paygo.ui;
 import javax.swing.*;
 import javax.swing.text.MaskFormatter;
 import java.awt.*;
-import java.text.ParseException;
 
 class InputTextPanel extends JPanel {
 
@@ -21,10 +20,20 @@ class InputTextPanel extends JPanel {
 
         if(!mask.equals("")) {
             try {
-                formattedTextField = new JFormattedTextField(new MaskFormatter(mask.replaceAll("@", "#")));
+                MaskFormatter maskFormatter = new MaskFormatter(mask.replaceAll("@", "#"));
+                maskFormatter.setOverwriteMode(true);
+
+                formattedTextField = new JFormattedTextField(maskFormatter);
                 formattedTextField.setMargin(new Insets(5, 2, 5, 2));
+                formattedTextField.setFocusLostBehavior(JFormattedTextField.PERSIST);
+                formattedTextField.grabFocus();
+
+                formattedTextField.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+                formattedTextField.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+                formattedTextField.setCaretPosition(0);
+
                 add(formattedTextField);
-            } catch (ParseException e) {
+            } catch (Exception e) {
                 addSimpleTextField();
             }
         } else {

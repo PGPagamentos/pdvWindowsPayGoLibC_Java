@@ -20,6 +20,10 @@ public class UserInputHandler {
         do {
             typedData = requestUserInput(userInterface, promptMessage, mascaraCaptura);
 
+            if (typedData.equals("-1")) {
+                return typedData;
+            }
+
             isValid = validateUserInput(userInterface, typedData, maxSize, minSize, validDataEntry, initialValue);
         } while (!isValid);
 
@@ -32,6 +36,11 @@ public class UserInputHandler {
 
         do {
             userInput = userInterface.requestSelection("Selecione uma opção", new ArrayList<>(menuOptions.values()));
+
+            if (userInput == -1) {
+                return "-1";
+            }
+
         } while (userInput > menu.getSize() || userInput < 0);
 
         return (String) menuOptions.keySet().toArray()[userInput];

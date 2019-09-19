@@ -16,15 +16,15 @@ import java.util.Map;
 public class SwingInterface implements UserInterface {
 
     private final Map<PWOper, String> operations = new LinkedHashMap<PWOper, String>() {{
-        put(PWOper.VERSION, "Versão da DLL");
-        put(PWOper.INSTALL, "Instalação");
-        put(PWOper.ADMIN, "Administrativo");
-        put(PWOper.SALE, "Venda");
-        put(PWOper.REPRINT, "Reimpressão");
-        put(PWOper.SALEVOID, "Cancelamento de Venda");
+        put(PWOper.VERSION, "PWOPER_VERSION");
+        put(PWOper.INSTALL, "PWOPER_INSTALL");
+        put(PWOper.ADMIN, "PWOPER_ADMIN");
+        put(PWOper.SALE, "PWOPER_SALE");
+        put(PWOper.REPRINT, "PWOPER_REPRINT");
+        put(PWOper.SALEVOID, "PWOPER_SALEVOID");
         put(PWOper.PNDCNF, "Verifica Confirmação Pendente");
-        put(PWOper.RPTTRUNC, "Relatório Sintético");
-        put(PWOper.RPTDETAIL, "Relatório Detalhado");
+        put(PWOper.RPTTRUNC, "PWOPER_RPTTRUNC");
+        put(PWOper.RPTDETAIL, "PWOPER_RPTDETAIL");
         put(PWOper.SELFSERV, "Autoatendimento");
     }};
     private final JFrame applicationWindow = new JFrame();
@@ -43,7 +43,24 @@ public class SwingInterface implements UserInterface {
         pinPadPanel = new PinPadPanel(pgWeb);
         logArea.setEditable(false);
         setupWindow();
+        setDefaultParams();
         init();
+    }
+
+    private void setDefaultParams() {
+        String listElement = PWInfo.AUTDEV + "(" + PWInfo.AUTDEV.getValue() + "): " + "AUTOMACAO DE SISTEMAS";
+        listModel.addElement(listElement);
+        listElement = PWInfo.AUTVER + "(" + PWInfo.AUTVER.getValue() + "): " + "2.0.1";
+        listModel.addElement(listElement);
+        listElement = PWInfo.AUTNAME + "(" + PWInfo.AUTNAME.getValue() + "): " + "PGWEBLIBTEST";
+        listModel.addElement(listElement);
+        listElement = PWInfo.AUTCAP + "(" + PWInfo.AUTCAP.getValue() + "): " + "28";
+        listModel.addElement(listElement);
+
+        params.put(PWInfo.AUTDEV, "AUTOMACAO DE SISTEMAS");
+        params.put(PWInfo.AUTVER, "2.0.1");
+        params.put(PWInfo.AUTNAME, "PGWEBLIBTEST");
+        params.put(PWInfo.AUTCAP, "28");
     }
 
     private void setupWindow() {
@@ -70,7 +87,7 @@ public class SwingInterface implements UserInterface {
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new GridLayout(1, 2));
         topPanel.setBorder(new EmptyBorder(10, 10, 5, 10));
-        topPanel.add(new JLabel("OPERAÇÃO:"));
+        topPanel.add(new JLabel("PWINFO_OPERATION:"));
         topPanel.add(operationsSelector);
 
         // CENTER PANEL
@@ -299,11 +316,9 @@ public class SwingInterface implements UserInterface {
 
         if (code == JOptionPane.OK_OPTION) {
             return inputPanel.getValue();
-        } else if (code == JOptionPane.CANCEL_OPTION) {
-            abort();
+        } else {
+            return "-1";
         }
-
-        return null;
     }
 
     @Override
@@ -313,8 +328,8 @@ public class SwingInterface implements UserInterface {
 
         if (code == JOptionPane.OK_OPTION) {
             return radioGroupPanel.getSelectedOption();
-        } else if(code == JOptionPane.CANCEL_OPTION) {
-            abort();
+        } else if(code == JOptionPane.CANCEL_OPTION || code == JOptionPane.CLOSED_OPTION) {
+            return -1;
         }
 
         return 0;
