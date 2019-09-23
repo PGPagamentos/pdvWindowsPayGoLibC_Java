@@ -14,6 +14,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Classe responsável por executar todas as etapas de uma transação através da biblioteca PGWebLib
+ */
 public class Transaction {
 
     private static final Map<PWInfo, String> mandatoryParams = new HashMap<PWInfo, String>() {{
@@ -48,6 +51,9 @@ public class Transaction {
         this.value = new byte[1000];
     }
 
+    /**
+     * Método responsável por executar o fluxo completo de uma transação (Inicialização, envio de parâmetros e finalização/confirmação)
+     */
     public PWRet executeOperation() {
         PWRet returnedCode;
         boolean abort = false;
@@ -165,6 +171,9 @@ public class Transaction {
         userInterface.logInfo("=> PW_iGetResult: " + resultCode + "\n\t" + this.getValue(true));
     }
 
+    /**
+     * Método responsável por cancelar uma transação em execução
+     */
     public void abort() {
         PWRet abort = LibFunctions.abortTransaction();
 
@@ -207,6 +216,9 @@ public class Transaction {
         return ret;
     }
 
+    /**
+     * Método responsável por enviar para a biblioteca PGWebLib os parâmetros obrigatórios para uma transação
+     */
     private void addMandatoryParams() throws MandatoryParamException {
         for (Map.Entry<PWInfo, String> entry : mandatoryParams.entrySet()) {
             PWRet ret = addParam(entry.getKey(), entry.getValue());
@@ -238,6 +250,9 @@ public class Transaction {
         return LibFunctions.executeTransaction(getData, numParams);
     }
 
+    /**
+     * Método responsável por solicitar e enviar parâmetros para a biblioteca PGWebLib
+     */
     private PWRet retrieveMoreData() throws InvalidDataType {
         System.out.println("\nParam size: " + this.numParams.getValue());
 
@@ -344,6 +359,9 @@ public class Transaction {
         return PWRet.OK;
     }
 
+    /**
+     * Método responsável por lidar com um retorno inesperado da biblioteca PGWebLib (diferente de PWRet.OK)
+     */
     private void handleUnexpectedReturnCode(PWRet returnedCode) {
         switch (returnedCode) {
             case REQPARAM:
@@ -382,6 +400,9 @@ public class Transaction {
         }
     }
 
+    /**
+     * Método responsável por confirmar uma transação (quando for necessária tal confirmação)
+     */
     private void finalizeTransaction() {
         try {
             this.value = new byte[1000];
@@ -399,6 +420,9 @@ public class Transaction {
         }
     }
 
+    /**
+     * Método responsável por requisitar à biblioteca PGWebLib os parâmetros para confirmação de uma transação pendente.
+     */
     private LinkedHashMap<PWInfo, String> getConfirmationParams() {
         LinkedHashMap<PWInfo, String> confirmationParams = new LinkedHashMap<>();
 

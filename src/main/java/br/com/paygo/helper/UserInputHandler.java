@@ -7,6 +7,9 @@ import br.com.paygo.ui.UserInterface;
 import java.util.ArrayList;
 import java.util.Map;
 
+/**
+ * Classe responsável por solicitar e validar os inputs do usuário com base nas regras de validação informadas pela biblioteca PGWebLib.
+ */
 public class UserInputHandler {
 
     public static String getTypedData(UserInterface userInterface, String promptMessage, int maxSize, int minSize, PWValidDataEntry validDataEntry) {

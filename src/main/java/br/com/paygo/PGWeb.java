@@ -5,6 +5,9 @@ import br.com.paygo.interop.LibFunctions;
 import br.com.paygo.interop.Transaction;
 import br.com.paygo.ui.UserInterface;
 
+/**
+ * Classe responsável por fazer a interface entre os métodos da biblioteca PGWebLib e a interface de usuário
+ */
 public class PGWeb {
 
     private final UserInterface userInterface;

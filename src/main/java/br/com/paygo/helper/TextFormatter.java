@@ -3,6 +3,9 @@ package br.com.paygo.helper;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Classe responsável por formatar a saída de dados da aplicação.
+ */
 public class TextFormatter {
 
     public static String formatByteMessage(byte[] param) {

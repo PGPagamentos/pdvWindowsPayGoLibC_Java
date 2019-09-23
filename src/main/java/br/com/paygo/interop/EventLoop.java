@@ -4,7 +4,10 @@ import br.com.paygo.enums.PWRet;
 import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.ui.UserInterface;
 
-public class EventLoop {
+/**
+ * Função utilizada para aguardar um retorno da biblioteca PGWebLib ou do PIN-pad
+ */
+class EventLoop {
 
     static PWRet execute(UserInterface userInterface, byte[] displayMessage) {
         PWRet eventLoopResponse;

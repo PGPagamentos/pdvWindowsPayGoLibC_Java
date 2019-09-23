@@ -11,8 +11,7 @@ import java.util.List;
 
 /**
  * Classe responsável por realizar a confirmação de uma transação.
- * Se forem passados todos os parâmetros para o objeto, ele irá realizar a confirmação da última transação.
- * Se não forem passados os parâmetros para o objeto, ele irá realizar a confirmação de uma transação pendente.
+ *
  */
 class Confirmation {
 
