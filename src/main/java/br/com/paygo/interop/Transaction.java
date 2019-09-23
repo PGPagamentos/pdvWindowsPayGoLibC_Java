@@ -19,7 +19,7 @@ public class Transaction {
     private static final Map<PWInfo, String> mandatoryParams = new HashMap<PWInfo, String>() {{
         put(PWInfo.AUTDEV, "AUTOMACAO DE SISTEMAS");
         put(PWInfo.AUTVER, ApplicationProperties.INSTANCE.getAppVersion());
-        put(PWInfo.AUTNAME, "PGWEBLIBTEST");
+        put(PWInfo.AUTNAME, ApplicationProperties.INSTANCE.getAppName());
         put(PWInfo.AUTCAP, "28");
         put(PWInfo.AUTHTECHUSER, "PAYGOTESTE");
     }};
@@ -175,8 +175,13 @@ public class Transaction {
 
     public void printReceipt() {
         try {
-            this.getResult(PWInfo.RCPTMERCH);
-            this.getResult(PWInfo.RCPTCHOLDER);
+            userInterface.logInfo("--- VIA ESTABELECIMENTO ---");
+            LibFunctions.getResult(PWInfo.RCPTMERCH, value);
+            userInterface.logInfo(this.getValue(false));
+
+            userInterface.logInfo("--- VIA CLIENTE ---");
+            LibFunctions.getResult(PWInfo.RCPTCHOLDER, value);
+            userInterface.logInfo(this.getValue(false));
         } catch (InvalidReturnTypeException e) {
             userInterface.showException(e.getMessage(), false);
         }

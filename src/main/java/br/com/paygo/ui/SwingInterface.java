@@ -49,20 +49,21 @@ public class SwingInterface implements UserInterface {
     }
 
     private void setDefaultParams() {
+        String appName = ApplicationProperties.INSTANCE.getAppName();
         String appVersion = ApplicationProperties.INSTANCE.getAppVersion();
 
         String listElement = PWInfo.AUTDEV + "(" + PWInfo.AUTDEV.getValue() + "): " + "AUTOMACAO DE SISTEMAS";
         listModel.addElement(listElement);
         listElement = PWInfo.AUTVER + "(" + PWInfo.AUTVER.getValue() + "): " + appVersion;
         listModel.addElement(listElement);
-        listElement = PWInfo.AUTNAME + "(" + PWInfo.AUTNAME.getValue() + "): " + "PGWEBLIBTEST";
+        listElement = PWInfo.AUTNAME + "(" + PWInfo.AUTNAME.getValue() + "): " + appName;
         listModel.addElement(listElement);
         listElement = PWInfo.AUTCAP + "(" + PWInfo.AUTCAP.getValue() + "): " + "28";
         listModel.addElement(listElement);
 
         params.put(PWInfo.AUTDEV, "AUTOMACAO DE SISTEMAS");
         params.put(PWInfo.AUTVER, appVersion);
-        params.put(PWInfo.AUTNAME, "PGWEBLIBTEST");
+        params.put(PWInfo.AUTNAME, appName);
         params.put(PWInfo.AUTCAP, "28");
     }
 
@@ -235,7 +236,7 @@ public class SwingInterface implements UserInterface {
 
         JScrollPane scroll = new JScrollPane(logArea);
         scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        scroll.setPreferredSize(new Dimension(385, 375));
+        scroll.setPreferredSize(new Dimension(400, 375));
 
         DefaultCaret caret = (DefaultCaret)logArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);

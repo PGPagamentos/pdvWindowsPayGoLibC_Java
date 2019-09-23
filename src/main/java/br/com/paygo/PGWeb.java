@@ -134,8 +134,9 @@ public class PGWeb {
 
         if (returnedCode == PWRet.OK) {
             try {
+                userInterface.logInfo("--- RELATÓRIO ---");
                 transaction.getResult(PWInfo.RCPTFULL);
-                userInterface.logInfo("\t" + transaction.getValue(false) + "\n\n");
+                userInterface.logInfo(transaction.getValue(false));
 
                 userInterface.logInfo("\n\n=> RELATÓRIO CONCLUÍDO <=\n\n");
             } catch (InvalidReturnTypeException e) {

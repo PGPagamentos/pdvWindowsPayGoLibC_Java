@@ -22,4 +22,8 @@ public enum ApplicationProperties {
     public String getAppVersion() {
         return properties.getProperty("app.version");
     }
+
+    public String getAppName() {
+        return properties.getProperty("app.name");
+    }
 }
