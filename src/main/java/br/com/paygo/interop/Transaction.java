@@ -1,7 +1,7 @@
 package br.com.paygo.interop;
 
 import br.com.paygo.enums.*;
-import br.com.paygo.exception.InvalidReturnTypeException;
+import br.com.paygo.exception.InvalidDataType;
 import br.com.paygo.exception.MandatoryParamException;
 import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.helper.UserInputHandler;
@@ -71,6 +71,9 @@ public class Transaction {
                     this.abort();
                     return PWRet.CANCEL;
                 } else if (returnedCode == PWRet.OK) {
+                    if (this.operation == PWOper.SALE || this.operation == PWOper.REPRINT) {
+                        this.printReceipt();
+                    }
                     this.finalizeTransaction();
 
                     this.getResult(PWInfo.RESULTMSG);
@@ -157,12 +160,12 @@ public class Transaction {
         return PWRet.OK;
     }
 
-    public void getResult(PWInfo param) throws InvalidReturnTypeException {
+    private void getResult(PWInfo param) {
         PWRet resultCode = LibFunctions.getResult(param, value);
         userInterface.logInfo("=> PW_iGetResult: " + resultCode + "\n\t" + this.getValue(true));
     }
 
-    public void abort() throws InvalidReturnTypeException {
+    public void abort() {
         PWRet abort = LibFunctions.abortTransaction();
 
         this.getResult(PWInfo.STATUS);
@@ -173,18 +176,14 @@ public class Transaction {
         }
     }
 
-    public void printReceipt() {
-        try {
-            userInterface.logInfo("--- VIA ESTABELECIMENTO ---");
-            LibFunctions.getResult(PWInfo.RCPTMERCH, value);
-            userInterface.logInfo(this.getValue(false));
+    private void printReceipt() {
+        userInterface.logInfo("--- VIA ESTABELECIMENTO ---");
+        LibFunctions.getResult(PWInfo.RCPTMERCH, value);
+        userInterface.logInfo(this.getValue(false));
 
-            userInterface.logInfo("--- VIA CLIENTE ---");
-            LibFunctions.getResult(PWInfo.RCPTCHOLDER, value);
-            userInterface.logInfo(this.getValue(false));
-        } catch (InvalidReturnTypeException e) {
-            userInterface.showException(e.getMessage(), false);
-        }
+        userInterface.logInfo("--- VIA CLIENTE ---");
+        LibFunctions.getResult(PWInfo.RCPTCHOLDER, value);
+        userInterface.logInfo(this.getValue(false));
     }
 
     public String getValue(boolean formatted) {
@@ -229,23 +228,17 @@ public class Transaction {
     }
 
     private PWRet addParam(PWInfo param, String data) {
-        try {
-            PWRet code = LibFunctions.addParam(param, data);
-            userInterface.logInfo("Parâmetro '" + param + "(" + param.getValue() + "): " + data + "' adicionado.");
+        PWRet code = LibFunctions.addParam(param, data);
+        userInterface.logInfo("Parâmetro '" + param + "(" + param.getValue() + "): " + data + "' adicionado.");
 
-            return code;
-        } catch (InvalidReturnTypeException e) {
-            userInterface.showException(e.getMessage(), false);
-        }
-
-        return PWRet.INVPARAM;
+        return code;
     }
 
-    private PWRet executeTransaction() throws InvalidReturnTypeException {
+    private PWRet executeTransaction() {
         return LibFunctions.executeTransaction(getData, numParams);
     }
 
-    private PWRet retrieveMoreData() throws InvalidReturnTypeException {
+    private PWRet retrieveMoreData() throws InvalidDataType {
         System.out.println("\nParam size: " + this.numParams.getValue());
 
         for (short index = 0; index < this.numParams.getValue(); index++) {
@@ -352,41 +345,36 @@ public class Transaction {
     }
 
     private void handleUnexpectedReturnCode(PWRet returnedCode) {
-        try {
-            switch (returnedCode) {
-                case REQPARAM:
-                    userInterface.showException("Falha de comunicação com a infraestrutura do Pay&Go Web (falta parâmetro obrigatório).", false);
-                    break;
-                case FROMHOSTPENDTRN:
-                    System.out.println("===========================================\n" +
-                            "== ERRO - EXITSTE UMA TRANSAÇÃO PENDENTE ==\n" +
-                            "===========================================");
+        switch (returnedCode) {
+            case REQPARAM:
+                userInterface.showException("Falha de comunicação com a infraestrutura do Pay&Go Web (falta parâmetro obrigatório).", false);
+                break;
+            case FROMHOSTPENDTRN:
+                System.out.println("===========================================\n" +
+                        "== ERRO - EXITSTE UMA TRANSAÇÃO PENDENTE ==\n" +
+                        "===========================================");
 
-                    Confirmation confirmation = new Confirmation(this);
-                    returnedCode = confirmation.executeConfirmationProcess(true);
+                Confirmation confirmation = new Confirmation(this);
+                returnedCode = confirmation.executeConfirmationProcess(true);
 
-                    userInterface.logInfo("=> PW_iConfirmation: " + returnedCode);
+                userInterface.logInfo("=> PW_iConfirmation: " + returnedCode);
 
-                    if (returnedCode == PWRet.OK) {
-                        this.printReceipt();
-                        userInterface.logInfo("\n\n=> CONFIRMAÇÃO PENDENTE CONCLUÍDA <=\n\n");
-                    }
-                    break;
-                case PINPADERR:
-                    userInterface.showException("Erro de comunição com o PIN-pad", false);
-                    break;
-                case TIMEOUT:
-                    userInterface.showException("Tempo limite excedido", false);
-                    break;
-                default:
-                    this.getResult(PWInfo.RESULTMSG);
-            }
-        } catch (InvalidReturnTypeException e) {
-            userInterface.showException(e.getMessage(), false);
+                if (returnedCode == PWRet.OK) {
+                    userInterface.logInfo("\n\n=> CONFIRMAÇÃO PENDENTE CONCLUÍDA <=\n\n");
+                }
+                break;
+            case PINPADERR:
+                userInterface.showException("Erro de comunição com o PIN-pad", false);
+                break;
+            case TIMEOUT:
+                userInterface.showException("Tempo limite excedido", false);
+                break;
+            default:
+                this.getResult(PWInfo.RESULTMSG);
         }
     }
 
-    private void executeEventLoop() throws InvalidReturnTypeException {
+    private void executeEventLoop() {
         PWRet eventLoopResponse = EventLoop.execute(userInterface, this.displayMessage);
 
         if (eventLoopResponse == PWRet.CANCEL) {
@@ -401,9 +389,7 @@ public class Transaction {
             System.out.println("Transação deve ser confirmada: " + new String(this.value));
 
             if (new String(this.value).trim().equals("1")) {
-                LinkedHashMap<PWInfo, String> confirmationParams = this.getConfirmationParams();
-
-                Confirmation confirmation = new Confirmation(this, confirmationParams);
+                Confirmation confirmation = new Confirmation(this, this.getConfirmationParams());
 
                 PWRet ret = confirmation.executeConfirmationProcess(false);
                 userInterface.logInfo("=> PW_iConfirmation: " + ret);
@@ -413,10 +399,11 @@ public class Transaction {
         }
     }
 
-    private LinkedHashMap<PWInfo, String> getConfirmationParams() throws InvalidReturnTypeException {
+    private LinkedHashMap<PWInfo, String> getConfirmationParams() {
         LinkedHashMap<PWInfo, String> confirmationParams = new LinkedHashMap<>();
 
         for (PWInfo info : Arrays.asList(PWInfo.REQNUM, PWInfo.AUTLOCREF, PWInfo.AUTEXTREF, PWInfo.VIRTMERCH, PWInfo.AUTHSYST)) {
+            this.value = new byte[1000];
             getResult(info);
             confirmationParams.put(info, new String(value));
         }

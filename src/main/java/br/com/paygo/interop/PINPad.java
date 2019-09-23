@@ -2,7 +2,6 @@ package br.com.paygo.interop;
 
 import br.com.paygo.enums.PWPINPadInput;
 import br.com.paygo.enums.PWRet;
-import br.com.paygo.exception.InvalidReturnTypeException;
 import com.sun.jna.ptr.LongByReference;
 
 import java.lang.reflect.Field;
@@ -41,31 +40,23 @@ class PINPad {
     }
 
     PWRet displayMessage(String message) {
-        try {
-            PWRet ret = LibFunctions.showMessageOnPINPad(message);
+        PWRet ret = LibFunctions.showMessageOnPINPad(message);
 
-            if (ret != PWRet.OK) {
-                return PWRet.PINPADERR;
-            }
-
-            return ret;
-        } catch (InvalidReturnTypeException e) {
+        if (ret != PWRet.OK) {
             return PWRet.PINPADERR;
         }
+
+        return ret;
     }
 
-    private void displayMenu() throws InvalidReturnTypeException {
+    private void displayMenu() {
         StringBuilder formattedMenu = new StringBuilder();
 
         for(Map.Entry<String, String> entry : pinPadMenu.entrySet()) {
             formattedMenu.append(" ").append(entry.getValue()).append(" ");
         }
 
-        PWRet ret = LibFunctions.showMessageOnPINPad(formattedMenu.toString());
-
-        if (ret != PWRet.OK) {
-            throw new InvalidReturnTypeException("Erro ao exibir mensagem no PIN-pad = " + PWRet.PINPADERR);
-        }
+        LibFunctions.showMessageOnPINPad(formattedMenu.toString());
     }
 
     private String getInput(byte[] displayMessage) throws Exception {

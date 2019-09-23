@@ -1,13 +1,12 @@
 package br.com.paygo.interop;
 
 import br.com.paygo.enums.PWRet;
-import br.com.paygo.exception.InvalidReturnTypeException;
 import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.ui.UserInterface;
 
 public class EventLoop {
 
-    static PWRet execute(UserInterface userInterface, byte[] displayMessage) throws InvalidReturnTypeException {
+    static PWRet execute(UserInterface userInterface, byte[] displayMessage) {
         PWRet eventLoopResponse;
 
         do {

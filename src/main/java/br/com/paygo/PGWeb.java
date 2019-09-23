@@ -1,8 +1,6 @@
 package br.com.paygo;
 
 import br.com.paygo.enums.*;
-import br.com.paygo.exception.InvalidReturnTypeException;
-import br.com.paygo.interop.Confirmation;
 import br.com.paygo.interop.LibFunctions;
 import br.com.paygo.interop.Transaction;
 import br.com.paygo.ui.UserInterface;
@@ -58,8 +56,6 @@ public class PGWeb {
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
-            transaction.printReceipt();
-
             userInterface.logInfo("\n\n=> VENDA CONCLUÍDA <=\n\n");
         }
     }
@@ -73,8 +69,6 @@ public class PGWeb {
                 returnedCode = transaction.executeOperation();
 
                 if (returnedCode == PWRet.OK) {
-                    transaction.printReceipt();
-
                     userInterface.logInfo("\n\n=> AUTO ATENDIMENTO CONCLUÍDO <=\n\n");
                 }
             } else {
@@ -90,8 +84,6 @@ public class PGWeb {
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
-            transaction.printReceipt();
-
             userInterface.logInfo("\n\n=> REIMPRESSÃO CONCLUÍDA <=\n\n");
         }
     }
@@ -107,14 +99,8 @@ public class PGWeb {
 
     public void checkPendingConfirmation() {
         try {
-            transaction = new Transaction(PWOper.PNDCNF, userInterface);
-
-            Confirmation confirmation = new Confirmation(transaction);
-            confirmation.executeConfirmationProcess(true);
-
-            transaction.printReceipt();
-
-            transaction.abort();
+            transaction = new Transaction(PWOper.RPTTRUNC, userInterface);
+            transaction.executeOperation();
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), false);
         }
@@ -133,15 +119,13 @@ public class PGWeb {
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
-            try {
-                userInterface.logInfo("--- RELATÓRIO ---");
-                transaction.getResult(PWInfo.RCPTFULL);
-                userInterface.logInfo(transaction.getValue(false));
+            userInterface.logInfo("--- RELATÓRIO ---");
+            byte[] value = new byte[1000];
+            LibFunctions.getResult(PWInfo.RCPTFULL, value);
 
-                userInterface.logInfo("\n\n=> RELATÓRIO CONCLUÍDO <=\n\n");
-            } catch (InvalidReturnTypeException e) {
-                userInterface.showException("Erro ao exibir o relatório de operações", false);
-            }
+            userInterface.logInfo(new String(value));
+
+            userInterface.logInfo("\n\n=> RELATÓRIO CONCLUÍDO <=\n\n");
         }
     }
 
@@ -177,11 +161,7 @@ public class PGWeb {
     }
 
     public void abort() {
-        try {
-            this.transaction.abort();
-            userInterface.logInfo("\n\n EXECUÇÃO ABORTADA PELO USUÁRIO! \n\n");
-        } catch (InvalidReturnTypeException e) {
-            userInterface.showException(e.getMessage(), true);
-        }
+        this.transaction.abort();
+        userInterface.logInfo("\n\n EXECUÇÃO ABORTADA PELO USUÁRIO! \n\n");
     }
 }

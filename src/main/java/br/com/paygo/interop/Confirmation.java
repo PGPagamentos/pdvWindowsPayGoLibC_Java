@@ -3,7 +3,6 @@ package br.com.paygo.interop;
 import br.com.paygo.enums.PWCnf;
 import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWRet;
-import br.com.paygo.exception.InvalidReturnTypeException;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -15,7 +14,7 @@ import java.util.List;
  * Se forem passados todos os parâmetros para o objeto, ele irá realizar a confirmação da última transação.
  * Se não forem passados os parâmetros para o objeto, ele irá realizar a confirmação de uma transação pendente.
  */
-public class Confirmation {
+class Confirmation {
 
     private LinkedHashMap<PWInfo, String> confirmationParams;
     private final Transaction transaction;
@@ -27,7 +26,7 @@ public class Confirmation {
         add(PWInfo.PNDAUTHSYST);
     }};
 
-    public Confirmation(Transaction transaction) {
+    Confirmation(Transaction transaction) {
         this.transaction = transaction;
         this.confirmationParams = new LinkedHashMap<>();
     }
@@ -37,7 +36,7 @@ public class Confirmation {
         this.confirmationParams = confirmationParams;
     }
 
-    public PWRet executeConfirmationProcess(boolean pendingTransaction) throws InvalidReturnTypeException {
+    PWRet executeConfirmationProcess(boolean pendingTransaction) {
         if (pendingTransaction) {
             transaction.getUserInterface().logInfo("\n======== CONFIRMAÇÃO PENDENTE ========");
         }
@@ -46,10 +45,7 @@ public class Confirmation {
         int actionSelected = retrieveAction();
 
         if (actionSelected == 0) {
-            if(confirmationParams.isEmpty()) {
-                transaction.getUserInterface().showException("Não é possível buscar automaticamente os dados da transação pendente neste contexto.", false);
-                return PWRet.FROMHOSTTRNNFOUND;
-            } else {
+            if (confirmationParams.isEmpty()) {
                 getConfirmationData();
             }
         } else {
@@ -107,7 +103,7 @@ public class Confirmation {
     /**
      * Busca na PGW os parâmetros de uma transação pendente.
      */
-    private void getConfirmationData() throws InvalidReturnTypeException {
+    private void getConfirmationData() {
         byte[] value;
 
         transaction.getUserInterface().logInfo("Buscando automaticamente os parâmetros de confirmação da transação pendente.");

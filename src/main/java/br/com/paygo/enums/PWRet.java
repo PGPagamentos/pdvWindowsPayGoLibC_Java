@@ -1,8 +1,7 @@
 package br.com.paygo.enums;
 
-import br.com.paygo.exception.InvalidReturnTypeException;
-
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * Códigos de Erro de Retorno da Biblioteca
@@ -54,9 +53,10 @@ public enum PWRet {
     INVALIDTRN((short)-2482),            // A transação informada para confirmação não existe ou já foi confirmada anteriormente.
     PPS_XXX((short)-2200),               // Erros retornados pelo PIN-pad), conforme seção 10.2
     PPS_MAX ((short)-2100),
-    PPS_MIN ((short)-2000);
+    PPS_MIN ((short)-2000),
+    UNKNOWN((short)-1);
 
-    private final short value;
+    private short value;
 
     PWRet(short value) {
         this.value = value;
@@ -66,7 +66,18 @@ public enum PWRet {
         return value;
     }
 
-    public static PWRet valueOf(short value) throws InvalidReturnTypeException {
-        return Arrays.stream(values()).filter(pwRet -> pwRet.value == value).findFirst().orElseThrow(() -> new InvalidReturnTypeException("O valor retornado (" + value + ") não foi mapeado."));
+    private void setValue(short value) {
+        this.value = value;
+    }
+
+    public static PWRet valueOf(short value) {
+        Optional<PWRet> ret = Arrays.stream(values()).filter(pwRet -> pwRet.value == value).findAny();
+
+        if (ret.isPresent()) {
+            return ret.get();
+        } else {
+            UNKNOWN.setValue(value);
+            return UNKNOWN;
+        }
     }
 }

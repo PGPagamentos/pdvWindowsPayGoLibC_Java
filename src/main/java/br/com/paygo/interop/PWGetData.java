@@ -4,7 +4,6 @@ import br.com.paygo.enums.PWData;
 import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWValidDataEntry;
 import br.com.paygo.exception.InvalidDataType;
-import br.com.paygo.exception.InvalidInfoType;
 import br.com.paygo.helper.TextFormatter;
 import com.sun.jna.Structure;
 
@@ -48,7 +47,7 @@ public class PWGetData extends Structure {
     public byte notificarCancelamento;
     public byte alinharDireita;
 
-    PWInfo getIdentificador() throws InvalidInfoType {
+    PWInfo getIdentificador() {
         return PWInfo.valueOf(this.identificador);
     }
 

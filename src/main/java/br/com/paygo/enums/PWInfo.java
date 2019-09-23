@@ -1,8 +1,7 @@
 package br.com.paygo.enums;
 
-import br.com.paygo.exception.InvalidInfoType;
-
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * Tipos de dados que podem ser informados pela Automação
@@ -93,18 +92,10 @@ public enum PWInfo {
     DUEAMNT(0xBF06),   // Valor devido pelo usuário), considerando CURREXP), já deduzido em TOTAMNT
     READJUSTEDAMNT(0xBF09), // Valor total da transação reajustado), este campo será utilizado caso o autorizador), por alguma regra de negócio específica dele), resolva alterar o valor total que foi solicitado para a transação
     STATUS((short)0x6F),
-
-    // ADICIONADOS (utilizados pela aplicação, porém não constam na documentação)
     NONE(0),                // Utilizado para controle interno quando PGW não retorna um código identificador.
-    STARTTIME(123),         // horário de início do relatório detalhado
-    ENDTIME(124),           // horário de fim do relatório detalhado
-    CARDLASTDIGITS(224),    // 4 últimos dígitos do cartão
-    CARDSECCODE(199),       // código de segurança do cartão
-    PPPASSW(221),           // senha do cartão informada no PIN-pad
-    CNFCANCELREQ(45),       // Confirmação de cancelamento: 0: confirma; 1: cancela.
-    XXX(135);               // Parâmetro requisitado no auto atendimento para definir...
+    UNKNOWN(-1);            // Utilizado para lidar com retornos inesperados
 
-    private final int value;
+    private int value;
 
     PWInfo(int value) {
         this.value = value;
@@ -114,7 +105,18 @@ public enum PWInfo {
         return value;
     }
 
-    public static PWInfo valueOf(short value) throws InvalidInfoType {
-        return Arrays.stream(values()).filter(pwInfo -> pwInfo.value == value).findFirst().orElseThrow(() -> new InvalidInfoType("Dado do tipo PWInfo não mapeado (" + value + ")."));
+    private void setValue(int value) {
+        this.value = value;
+    }
+
+    public static PWInfo valueOf(short value) {
+        Optional<PWInfo> info = Arrays.stream(values()).filter(pwInfo -> pwInfo.value == value).findAny();
+
+        if (info.isPresent()) {
+            return info.get();
+        } else {
+            UNKNOWN.setValue(value);
+            return UNKNOWN;
+        }
     }
 }
