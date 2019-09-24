@@ -1,8 +1,8 @@
 package br.com.paygo.interop;
 
 import br.com.paygo.enums.*;
-import br.com.paygo.exception.InvalidDataType;
-import br.com.paygo.exception.MandatoryParamException;
+import br.com.paygo.exceptions.InvalidDataType;
+import br.com.paygo.exceptions.MandatoryParamException;
 import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.helper.UserInputHandler;
 import br.com.paygo.ui.UserInterface;

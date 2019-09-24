@@ -1,6 +1,6 @@
 package br.com.paygo.enums;
 
-import br.com.paygo.exception.InvalidConfirmationType;
+import br.com.paygo.exceptions.InvalidConfirmationType;
 
 import java.util.Arrays;
 

@@ -1,4 +1,4 @@
-package br.com.paygo.exception;
+package br.com.paygo.exceptions;
 
 /**
  * Exception lançada quando um código de confirmação (PWCnf) informado não está mapeado na aplicação.

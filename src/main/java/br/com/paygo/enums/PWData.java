@@ -1,6 +1,6 @@
 package br.com.paygo.enums;
 
-import br.com.paygo.exception.InvalidDataType;
+import br.com.paygo.exceptions.InvalidDataType;
 
 import java.util.Arrays;
 

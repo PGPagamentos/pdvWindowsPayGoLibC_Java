@@ -3,7 +3,7 @@ package br.com.paygo.interop;
 import br.com.paygo.enums.PWData;
 import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWValidDataEntry;
-import br.com.paygo.exception.InvalidDataType;
+import br.com.paygo.exceptions.InvalidDataType;
 import br.com.paygo.helper.TextFormatter;
 import com.sun.jna.Structure;
 

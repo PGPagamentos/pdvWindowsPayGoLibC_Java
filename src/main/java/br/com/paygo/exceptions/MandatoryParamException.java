@@ -1,4 +1,4 @@
-package br.com.paygo.exception;
+package br.com.paygo.exceptions;
 
 /**
  * Exception lançada quando o ocorre algum erro ao adicionar os parâmetros obrigatórios da aplicação.
