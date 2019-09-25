@@ -243,7 +243,7 @@ public class SwingInterface implements UserInterface {
 
         JPanel scrollWrapper = new JPanel();
         scrollWrapper.add(scroll);
-        scrollWrapper.setBorder(new EmptyBorder(0, 5, 10, 5));
+        scrollWrapper.setBorder(new EmptyBorder(0, 0, 10, 0));
 
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
@@ -316,7 +316,7 @@ public class SwingInterface implements UserInterface {
     @Override
     public String requestParam(String title, String message, String mask) {
         InputTextPanel inputPanel = new InputTextPanel(message, mask);
-        int code = JOptionPane.showConfirmDialog(applicationWindow, inputPanel, title, JOptionPane.OK_CANCEL_OPTION);
+            int code = JOptionPane.showConfirmDialog(applicationWindow, inputPanel, title, JOptionPane.OK_CANCEL_OPTION);
 
         if (code == JOptionPane.OK_OPTION) {
             return inputPanel.getValue();

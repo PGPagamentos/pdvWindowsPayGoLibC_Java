@@ -74,13 +74,11 @@ class PINPad {
 
             System.out.println(event.getValue());
             if (ret == PWRet.OK) {
-
-                PWPINPadInput inputEvent = PWPINPadInput.valueOf((int)event.getValue());
-                System.out.println(inputEvent);
+                PWPINPadInput inputEvent = PWPINPadInput.valueOf((int) event.getValue());
 
                 if (event.getValue() == PWPINPadInput.KEYCANC.getValue()) {
                     LibFunctions.abortTransaction();
-                    throw new Exception("Transação cancelada!");
+                    return "-1";
                 }
 
                 switch (inputEvent) {
@@ -89,17 +87,16 @@ class PINPad {
                     case KEYF2:
                         return opcoesMenu.get(1);
                     case KEYF3:
-                        if(opcoesMenu.size() >= 3) {
+                        if (opcoesMenu.size() >= 3) {
                             return opcoesMenu.get(3);
                         }
                         break;
                     case KEYF4:
-                        if(opcoesMenu.size() >= 4) {
+                        if (opcoesMenu.size() >= 4) {
                             return opcoesMenu.get(4);
                         }
                         break;
                 }
-
             }
         } while (true);
     }

@@ -36,10 +36,6 @@ class Confirmation {
     }
 
     PWRet executeConfirmationProcess(boolean pendingTransaction) {
-        if (pendingTransaction) {
-            transaction.getUserInterface().logInfo("\n======== CONFIRMAÇÃO PENDENTE ========");
-        }
-
         PWCnf confirmationType = retrieveConfirmationType();
         int actionSelected = retrieveAction();
 
@@ -111,8 +107,7 @@ class Confirmation {
             value = new byte[1000];
 
             LibFunctions.getResult(info, value);
-
-            transaction.getUserInterface().logInfo(info + " - " + new String(value));
+            transaction.getUserInterface().logInfo(info + "<0X" + Integer.toHexString(info.getValue()) + "> = " + new String(value));
 
             confirmationParams.put(info, new String(value));
         }

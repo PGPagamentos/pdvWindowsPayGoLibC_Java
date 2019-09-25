@@ -1,7 +1,6 @@
 package br.com.paygo.interop;
 
 import br.com.paygo.enums.PWCnf;
-import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWUserDataMessage;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
@@ -36,8 +35,8 @@ public class PGWebLib {
         return libInterface.PW_iAddParam(param, paramValue);
     }
 
-    short getResult(PWInfo param, byte[] paramValue) {
-        return libInterface.PW_iGetResult(param.getValue(), paramValue, paramValue.length);
+    short getResult(int param, byte[] paramValue) {
+        return libInterface.PW_iGetResult(param, paramValue, paramValue.length);
     }
 
     short executeTransaction(PWGetData[] getData, ShortByReference numParams) {
@@ -108,9 +107,9 @@ public class PGWebLib {
         return libInterface.PW_iPPGenericCMD(index);
     }
 
-    public short PINPadShowMessage(String message) {
+    short PINPadShowMessage(String message) {
         return libInterface.PW_iPPDisplay(message);
     }
 
-    public short PINPadWaitEvent(LongByReference event) { return  libInterface. PW_iPPWaitEvent(event); }
+    short PINPadWaitEvent(LongByReference event) { return  libInterface. PW_iPPWaitEvent(event); }
 }

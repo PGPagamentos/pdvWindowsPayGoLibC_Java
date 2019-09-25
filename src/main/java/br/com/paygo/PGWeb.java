@@ -20,6 +20,7 @@ public class PGWeb {
 
     public void init() {
         try {
+            userInterface.logInfo("=== INICIALIZAÇÃO DA BIBLIOTECA ===\n");
             PWRet returnedCode = LibFunctions.init(PATH);
             userInterface.logInfo("=> PW_iInit: " + returnedCode.toString());
         } catch (Exception e) {
@@ -28,21 +29,25 @@ public class PGWeb {
     }
 
     public void version() {
+        userInterface.logInfo("\n=== VERIFICAÇÃO DE VERSÃO DA DLL ===\n");
         transaction = new Transaction(PWOper.VERSION, userInterface);
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n\n=> VERIFICAÇÃO DE VERSÃO CONCLUÍDA <=\n\n");
+            userInterface.logInfo("\n=== VERIFICAÇÃO DE VERSÃO DA DLL CONCLUÍDA ===\n");
         }
     }
 
     public void install() {
+        userInterface.logInfo("\n=== INSTALAÇÃO ===\n");
         transaction = new Transaction(PWOper.INSTALL, userInterface);
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n\n=> INSTALAÇÃO CONCLUÍDA <=\n\n");
+            userInterface.logInfo("\n=== INSTALAÇÃO CONCLUÍDA ===\n");
         }
+
+        transaction.printResultParams();
     }
 
     public void admin() {
@@ -50,20 +55,25 @@ public class PGWeb {
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n\n=> ADMINISTRATIVO CONCLUÍDO <=\n\n");
+            userInterface.logInfo("\n=== ADMINISTRATIVO CONCLUÍDO ===\n");
         }
     }
 
     public void sale() {
+        userInterface.logInfo("\n=== VENDA ===\n");
+
         transaction = new Transaction(PWOper.SALE, userInterface);
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n\n=> VENDA CONCLUÍDA <=\n\n");
+            userInterface.logInfo("\n=> VENDA CONCLUÍDA <=\n");
         }
+
+        transaction.printResultParams();
     }
 
     public void saleOnPINPad() {
+        userInterface.logInfo("\n=== AUTO ATENDIMENTO ===\n");
         try {
             transaction = new Transaction(PWOper.SALE, userInterface);
             PWRet returnedCode = transaction.initInteractionOnPINPad();
@@ -72,10 +82,10 @@ public class PGWeb {
                 returnedCode = transaction.executeOperation();
 
                 if (returnedCode == PWRet.OK) {
-                    userInterface.logInfo("\n\n=> AUTO ATENDIMENTO CONCLUÍDO <=\n\n");
+                    userInterface.logInfo("\n=== AUTO ATENDIMENTO CONCLUÍDO ===\n");
                 }
             } else {
-                userInterface.logInfo("\n\n=> AUTO ATENDIMENTO ABORTADO <=\n\n");
+                userInterface.logInfo("\n=== AUTO ATENDIMENTO CANCELADO ===\n");
             }
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), true);
@@ -83,20 +93,22 @@ public class PGWeb {
     }
 
     public void reprint() {
+        userInterface.logInfo("\n=== REIMPRESSÃO ===\n");
         transaction = new Transaction(PWOper.REPRINT, userInterface);
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n\n=> REIMPRESSÃO CONCLUÍDA <=\n\n");
+            userInterface.logInfo("\n=== REIMPRESSÃO CONCLUÍDA ===\n");
         }
     }
 
     public void saleVoid() {
+        userInterface.logInfo("\n=== CANCELAMENTO DE VENDA ===\n");
         transaction = new Transaction(PWOper.SALEVOID, userInterface);
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n\n=> CANCELAMENTO DE VENDA CONCLUÍDO <=\n\n");
+            userInterface.logInfo("\n=== CANCELAMENTO DE VENDA CONCLUÍDO ===\n");
         }
     }
 
@@ -122,13 +134,13 @@ public class PGWeb {
         PWRet returnedCode = transaction.executeOperation();
 
         if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("--- RELATÓRIO ---");
+            userInterface.logInfo("\n=== RELATÓRIO ===\n");
             byte[] value = new byte[1000];
             LibFunctions.getResult(PWInfo.RCPTFULL, value);
 
             userInterface.logInfo(new String(value));
 
-            userInterface.logInfo("\n\n=> RELATÓRIO CONCLUÍDO <=\n\n");
+            userInterface.logInfo("\n=== RELATÓRIO CONCLUÍDO ===\n");
         }
     }
 
@@ -164,7 +176,7 @@ public class PGWeb {
     }
 
     public void abort() {
-        this.transaction.abort();
-        userInterface.logInfo("\n\n EXECUÇÃO ABORTADA PELO USUÁRIO! \n\n");
+        this.transaction.abort(false);
+        userInterface.logInfo("\n\n EXECUÇÃO CANCELADA PELO USUÁRIO! \n\n");
     }
 }
