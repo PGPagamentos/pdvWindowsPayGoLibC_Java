@@ -4,8 +4,15 @@ import javax.swing.*;
 import javax.swing.text.MaskFormatter;
 import java.awt.*;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 
 class InputTextPanel extends JPanel {
+
+    private static final String[] currencyMasks = new String[] {
+        "R$@.@@@.@@@,@@",
+        "@.@@@.@@@.@@@,@@",
+        "@@@.@@@,@@"
+    };
 
     private JTextField textField;
     private ABMTextField currencyField;
@@ -22,7 +29,7 @@ class InputTextPanel extends JPanel {
 
         if(!mask.equals("")) {
             try {
-                if (mask.equals("R$@.@@@.@@@,@@")) {
+                if (Arrays.asList(currencyMasks).contains(mask)) {
                     DecimalFormat format = new DecimalFormat("R$#,###,##0.00");
                     currencyField = new ABMTextField(format);
 
@@ -53,7 +60,7 @@ class InputTextPanel extends JPanel {
     String getValue() {
         if (!mask.equals("") && textField == null) {
 
-            if (mask.equals("R$@.@@@.@@@,@@")) {
+            if (Arrays.asList(currencyMasks).contains(mask)) {
                 return currencyField.getText().replaceAll("[^\\d]", "");
             }
 

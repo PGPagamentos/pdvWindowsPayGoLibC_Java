@@ -90,6 +90,8 @@ public class PGWeb {
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), true);
         }
+
+        transaction.printResultParams();
     }
 
     public void reprint() {
@@ -100,6 +102,8 @@ public class PGWeb {
         if (returnedCode == PWRet.OK) {
             userInterface.logInfo("\n=== REIMPRESSÃO CONCLUÍDA ===\n");
         }
+
+        transaction.printResultParams();
     }
 
     public void saleVoid() {
@@ -110,6 +114,8 @@ public class PGWeb {
         if (returnedCode == PWRet.OK) {
             userInterface.logInfo("\n=== CANCELAMENTO DE VENDA CONCLUÍDO ===\n");
         }
+
+        transaction.printResultParams();
     }
 
     public void checkPendingConfirmation() {
@@ -119,6 +125,8 @@ public class PGWeb {
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), false);
         }
+
+        transaction.printResultParams();
     }
 
     public void reportTrunc() {
@@ -142,6 +150,8 @@ public class PGWeb {
 
             userInterface.logInfo("\n=== RELATÓRIO CONCLUÍDO ===\n");
         }
+
+        transaction.printResultParams();
     }
 
     public String requestDataOnPinPad(PWData data, PWUserDataMessage message, int minSize, int maxSize) {
@@ -171,6 +181,8 @@ public class PGWeb {
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), false);
         }
+
+        transaction.printResultParams();
 
         return new String(response);
     }

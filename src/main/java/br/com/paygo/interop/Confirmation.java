@@ -35,8 +35,13 @@ class Confirmation {
         this.confirmationParams = confirmationParams;
     }
 
-    PWRet executeConfirmationProcess(boolean pendingTransaction) {
+    PWRet executeConfirmationProcess() {
         PWCnf confirmationType = retrieveConfirmationType();
+
+        if (confirmationType == null) {
+            return PWRet.CANCEL;
+        }
+
         int actionSelected = retrieveAction();
 
         if (actionSelected == 0) {
@@ -63,6 +68,10 @@ class Confirmation {
 
         do {
             selectedOption = transaction.getUserInterface().requestSelection("Selecione o tipo de confirmação", confirmationTypeOptions);
+
+            if (selectedOption == -1) {
+                return null;
+            }
         } while (selectedOption < 0 || selectedOption > 9);
 
         return PWCnf.values()[selectedOption];

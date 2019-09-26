@@ -60,7 +60,7 @@ public class Transaction {
             if (returnedCode == PWRet.OK) {
                 do {
                     returnedCode = this.executeTransaction();
-                    userInterface.logInfo("=> PW_iExecTransac: " + returnedCode);
+                    userInterface.logInfo("=> PW_iExecTransac: " + returnedCode + "(" + returnedCode.getValue() + ")");
 
                     // verifica se precisam ser informados mais parâmetros para a transação
                     if (returnedCode == PWRet.MOREDATA) {
@@ -166,7 +166,7 @@ public class Transaction {
     public void abort(boolean isPINPad) {
         if (isPINPad) {
             PWRet ret = LibFunctions.abortTransaction();
-            userInterface.logInfo("=> PW_iPPAbort: " + ret.toString());
+            userInterface.logInfo("=> PW_iPPAbort: " + ret + "(" + ret.getValue() + ")");
 
             LibFunctions.showMessageOnPINPad("OPERACAO\nCANCELADA");
         }
@@ -220,7 +220,7 @@ public class Transaction {
         PWRet ret = LibFunctions.newTransaction(this.operation);
 
         if (ret == PWRet.OK) {
-            userInterface.logInfo("=> PW_iNewTransac: " + ret.toString());
+            userInterface.logInfo("=> PW_iNewTransac: " + ret + "(" + ret.getValue() + ")");
             this.addMandatoryParams();
 
             externalParams = userInterface.getParams();
@@ -339,7 +339,8 @@ public class Transaction {
                         break;
                     case PPREMCRD:
                         System.out.println("Saindo do fluxo pelo RemoveCard: " + pwGetData.getPrompt());
-                        userInterface.logInfo("=> PW_iPPRemoveCard: " + LibFunctions.removeCardFromPINPad());
+                        PWRet ret = LibFunctions.removeCardFromPINPad();
+                        userInterface.logInfo("=> PW_iPPRemoveCard: " + ret + "(" + ret.getValue() + ")");
 
                         eventLoopResponse = executeEventLoop();
                         break;
@@ -355,20 +356,24 @@ public class Transaction {
                             addParam(PWInfo.CARDFULLPAN, cardNumber);
                         } else { // pin-pad
                             userInterface.logInfo("CAPTURA DE DADOS DO PIN-PAD");
-                            userInterface.logInfo("=> PW_iPPGetCard: " + LibFunctions.getCardFromPINPad(index));
+                            ret = LibFunctions.getCardFromPINPad(index);
+                            userInterface.logInfo("=> PW_iPPGetCard: " + ret + "(" + ret.getValue() + ")");
                             eventLoopResponse = executeEventLoop();
                         }
                         break;
                     case CARDOFF:
-                        userInterface.logInfo("=> PW_iPPGoOnChip: " + LibFunctions.offlineCardProcessing(index));
+                        ret = LibFunctions.offlineCardProcessing(index);
+                        userInterface.logInfo("=> PW_iPPGoOnChip: " + ret + "(" + ret.getValue() + ")");
                         eventLoopResponse = executeEventLoop();
                         break;
                     case CARDONL:
-                        userInterface.logInfo("=> PW_iPPFinishChip: " + LibFunctions.finishOfflineProcessing(index));
+                        ret = LibFunctions.finishOfflineProcessing(index);
+                        userInterface.logInfo("=> PW_iPPFinishChip: " + ret + "(" + ret.getValue() + ")");
                         eventLoopResponse = executeEventLoop();
                         break;
                     case PPENCPIN:
-                        userInterface.logInfo("=> PW_iPPGetPIN: " + LibFunctions.getPIN(index));
+                        ret = LibFunctions.getPIN(index);
+                        userInterface.logInfo("=> PW_iPPGetPIN: " + ret + "(" + ret.getValue() + ")");
                         eventLoopResponse = executeEventLoop();
                 }
 
@@ -397,19 +402,21 @@ public class Transaction {
             case FROMHOSTPENDTRN:
                 // relatório resumido está sendo utilizado para verificar e autorizar transações pendentes
                 if (operation != PWOper.RPTTRUNC) {
+                    userInterface.showException("Existe uma transação pendente", false);
                     userInterface.logInfo("===========================================\n" +
                             "== ERRO - EXITSTE UMA TRANSAÇÃO PENDENTE ==\n" +
                             "===========================================");
                 } else {
+                    userInterface.showException("Existe uma transação pendente!", false);
                     userInterface.logInfo("\n=== CONFIRMAÇÃO TRANSAÇÃO PENDENTE ===\n");
 
                     Confirmation confirmation = new Confirmation(this);
-                    returnedCode = confirmation.executeConfirmationProcess(true);
+                    returnedCode = confirmation.executeConfirmationProcess();
 
-                    userInterface.logInfo("=> PW_iConfirmation: " + returnedCode);
+                    userInterface.logInfo("=> PW_iConfirmation: " + returnedCode + "(" + returnedCode.getValue() + ")");
 
                     if (returnedCode == PWRet.OK) {
-                        userInterface.logInfo("\n\n=> CONFIRMAÇÃO TRANSAÇÃO PENDENTE CONCLUÍDA <=\n\n");
+                        userInterface.logInfo("\n=== CONFIRMAÇÃO TRANSAÇÃO PENDENTE CONCLUÍDA ===\n");
                     }
                 }
                 break;
@@ -440,11 +447,17 @@ public class Transaction {
             userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
 
             if (new String(this.value).trim().equals("1")) {
+                userInterface.showException("Esta transação deve ser confirmada", false);
                 userInterface.logInfo("\n\tEsta transação deve ser confirmada\n");
                 Confirmation confirmation = new Confirmation(this, this.getConfirmationParams());
 
-                PWRet ret = confirmation.executeConfirmationProcess(false);
-                userInterface.logInfo("=> PW_iConfirmation: " + ret);
+                PWRet ret = confirmation.executeConfirmationProcess();
+
+                if (ret == PWRet.CANCEL) {
+                    abort(false);
+                } else {
+                    userInterface.logInfo("=> PW_iConfirmation: " + ret + "(" + ret.getValue() + ")");
+                }
             }
         } catch (Exception e) {
             userInterface.logInfo("\n\tErro ao confirmar a transação\n");
