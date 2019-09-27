@@ -1,8 +1,10 @@
 package br.com.paygo.interop;
 
+import br.com.paygo.PGWeb;
 import br.com.paygo.enums.PWCnf;
 import br.com.paygo.enums.PWInfo;
 import br.com.paygo.enums.PWRet;
+import br.com.paygo.ui.UserInterface;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -13,11 +15,18 @@ import java.util.List;
  * Classe responsável por realizar a confirmação de uma transação.
  *
  */
-class Confirmation {
+public class Confirmation {
 
     private LinkedHashMap<PWInfo, String> confirmationParams;
-    private final Transaction transaction;
-    private final List<PWInfo> requiredPendingParams = new LinkedList<PWInfo>() {{
+    private final UserInterface userInterface;
+    private static final List<PWInfo> requiredConfirmationParams = new LinkedList<PWInfo>() {{
+        add(PWInfo.REQNUM);
+        add(PWInfo.AUTLOCREF);
+        add(PWInfo.AUTEXTREF);
+        add(PWInfo.VIRTMERCH);
+        add(PWInfo.AUTHSYST);
+    }};
+    private static final List<PWInfo> requiredPendingConfirmationParams = new LinkedList<PWInfo>() {{
         add(PWInfo.PNDREQNUM);
         add(PWInfo.PNDAUTLOCREF);
         add(PWInfo.PNDAUTEXTREF);
@@ -25,17 +34,12 @@ class Confirmation {
         add(PWInfo.PNDAUTHSYST);
     }};
 
-    Confirmation(Transaction transaction) {
-        this.transaction = transaction;
-        this.confirmationParams = new LinkedHashMap<>();
-    }
-
-    Confirmation(Transaction transaction, LinkedHashMap<PWInfo, String> confirmationParams) {
-        this.transaction = transaction;
+    public Confirmation(UserInterface userInterface, LinkedHashMap<PWInfo, String> confirmationParams) {
+        this.userInterface = userInterface;
         this.confirmationParams = confirmationParams;
     }
 
-    PWRet executeConfirmationProcess() {
+    public PWRet executeConfirmationProcess() {
         PWCnf confirmationType = retrieveConfirmationType();
 
         if (confirmationType == null) {
@@ -44,15 +48,14 @@ class Confirmation {
 
         int actionSelected = retrieveAction();
 
-        if (actionSelected == 0) {
-            if (confirmationParams.isEmpty()) {
-                getConfirmationData();
-            }
-        } else {
+        if (actionSelected == 1) {
             retrieveConfirmationData();
+        } else if (confirmationParams.isEmpty()) {
+            userInterface.showException("Parâmetros para uma confirmação automática não foram encontrados", false);
+            return PWRet.CANCEL;
         }
 
-        return LibFunctions.confirmTransaction(confirmationType, new LinkedList<>(confirmationParams.values()));
+        return LibFunctions.confirmTransaction(confirmationType, new LinkedList<>(PGWeb.confirmData.values()));
     }
 
     /**
@@ -67,7 +70,7 @@ class Confirmation {
         }
 
         do {
-            selectedOption = transaction.getUserInterface().requestSelection("Selecione o tipo de confirmação", confirmationTypeOptions);
+            selectedOption = userInterface.requestSelection("Selecione o tipo de confirmação", confirmationTypeOptions);
 
             if (selectedOption == -1) {
                 return null;
@@ -88,7 +91,7 @@ class Confirmation {
         actions.add("Informar dados manualmente");
 
         do {
-            selectedOption = transaction.getUserInterface().requestSelection("Ação", actions);
+            selectedOption = userInterface.requestSelection("Ação", actions);
         } while(selectedOption < 0 || selectedOption > 1);
 
         return selectedOption;
@@ -98,8 +101,10 @@ class Confirmation {
      * Solicita ao usuários os parâmetros de uma transação pendente.
      */
     private void retrieveConfirmationData() {
-        for (PWInfo info : requiredPendingParams) {
-            String response = transaction.getUserInterface().requestParam("Parâmetros da transação pendente", info.toString(), "");
+        PGWeb.confirmData.clear();
+
+        for (PWInfo info : requiredPendingConfirmationParams) {
+            String response = userInterface.requestParam("Parâmetros da transação pendente", info.toString(), "");
             confirmationParams.put(info, response);
         }
     }
@@ -107,18 +112,23 @@ class Confirmation {
     /**
      * Busca na PGW os parâmetros de uma transação pendente.
      */
-    private void getConfirmationData() {
+    static LinkedHashMap<PWInfo, String> getConfirmationData(UserInterface userInterface, boolean pendingTransaction) {
+        LinkedHashMap<PWInfo, String> params = new LinkedHashMap<>();
         byte[] value;
 
-        transaction.getUserInterface().logInfo("Buscando automaticamente os parâmetros de confirmação da transação pendente.");
+        userInterface.logInfo("Buscando automaticamente os parâmetros de confirmação da transação.");
 
-        for (PWInfo info : requiredPendingParams) {
+        List<PWInfo> pendingParams = pendingTransaction ? requiredPendingConfirmationParams : requiredConfirmationParams;
+
+        for (PWInfo info : pendingParams) {
             value = new byte[1000];
 
             LibFunctions.getResult(info, value);
-            transaction.getUserInterface().logInfo(info + "<0X" + Integer.toHexString(info.getValue()) + "> = " + new String(value));
+            userInterface.logInfo(info + "<0X" + Integer.toHexString(info.getValue()) + "> = " + new String(value));
 
-            confirmationParams.put(info, new String(value));
+            params.put(info, new String(value));
         }
+
+        return params;
     }
 }

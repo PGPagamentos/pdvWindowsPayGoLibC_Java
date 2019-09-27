@@ -1,5 +1,6 @@
 package br.com.paygo.interop;
 
+import br.com.paygo.PGWeb;
 import br.com.paygo.enums.*;
 import br.com.paygo.exceptions.InvalidDataType;
 import br.com.paygo.exceptions.MandatoryParamException;
@@ -11,7 +12,6 @@ import com.sun.jna.ptr.ShortByReference;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -64,9 +64,50 @@ public class Transaction {
 
                     // verifica se precisam ser informados mais parâmetros para a transação
                     if (returnedCode == PWRet.MOREDATA) {
-                        if (this.retrieveMoreData() == PWRet.CANCEL) {
-                            abort = true;
+                        PWRet moreDataRet = this.retrieveMoreData();
+
+                         if (moreDataRet != PWRet.OK) {
+                             if (moreDataRet == PWRet.CANCEL) {
+                                 abort = true;
+                             }
+
+                            getResult(PWInfo.CNFREQ);
+                            userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
+
+                            if (new String(this.value).trim().equals("1")) {
+                                if (confirmTransaction() == PWRet.OK) {
+                                    PGWeb.confirmData.clear();
+                                }
+                            }
                         }
+                    } else {
+                        if (returnedCode == PWRet.NOTHING) {
+                            continue;
+                        }
+
+                        if (returnedCode == PWRet.FROMHOSTPENDTRN) {
+                            userInterface.showException("Existe uma transação pendente", false);
+                            userInterface.logInfo("===========================================\n" +
+                                    "== ERRO - EXISTE UMA TRANSAÇÃO PENDENTE ==\n" +
+                                    "===========================================");
+
+                            PGWeb.confirmData = Confirmation.getConfirmationData(userInterface, true);
+                        } else {
+                            if (PGWeb.confirmData.isEmpty()) {
+                                PGWeb.confirmData = Confirmation.getConfirmationData(userInterface, false);
+                            }
+                        }
+
+                        getResult(PWInfo.CNFREQ);
+                        userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
+
+                        if (new String(this.value).trim().equals("1")) {
+                            if (confirmTransaction() == PWRet.OK) {
+                                PGWeb.confirmData.clear();
+                            }
+                        }
+
+                        return PWRet.OK;
                     }
                 } while (returnedCode == PWRet.MOREDATA && !abort);
 
@@ -77,8 +118,6 @@ public class Transaction {
                         this.printReceipt();
                     }
 
-                    this.finalizeTransaction();
-
                     this.getResult(PWInfo.RESULTMSG);
                     userInterface.logInfo("\n\tRESPOSTA: " + getValue(true));
                 } else {
@@ -87,6 +126,16 @@ public class Transaction {
             } else {
                 this.getResult(PWInfo.RESULTMSG);
                 userInterface.logInfo("\n\tRESPOSTA: " + getValue(true));
+
+                return returnedCode;
+            }
+
+            getResult(PWInfo.CNFREQ);
+            userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
+
+            if (new String(this.value).trim().equals("1")) {
+                returnedCode = confirmTransaction();
+                userInterface.logInfo("=> PW_iConfirmation: " + returnedCode + "(" + returnedCode.getValue() + ")");
             }
 
             return returnedCode;
@@ -210,10 +259,6 @@ public class Transaction {
             }
         }
         userInterface.logInfo("========================================\n");
-    }
-
-    UserInterface getUserInterface() {
-        return userInterface;
     }
 
     private PWRet start() throws Exception {
@@ -399,27 +444,6 @@ public class Transaction {
             case REQPARAM:
                 userInterface.showException("Falha de comunicação com a infraestrutura do Pay&Go Web (falta parâmetro obrigatório).", false);
                 break;
-            case FROMHOSTPENDTRN:
-                // relatório resumido está sendo utilizado para verificar e autorizar transações pendentes
-                if (operation != PWOper.RPTTRUNC) {
-                    userInterface.showException("Existe uma transação pendente", false);
-                    userInterface.logInfo("===========================================\n" +
-                            "== ERRO - EXITSTE UMA TRANSAÇÃO PENDENTE ==\n" +
-                            "===========================================");
-                } else {
-                    userInterface.showException("Existe uma transação pendente!", false);
-                    userInterface.logInfo("\n=== CONFIRMAÇÃO TRANSAÇÃO PENDENTE ===\n");
-
-                    Confirmation confirmation = new Confirmation(this);
-                    returnedCode = confirmation.executeConfirmationProcess();
-
-                    userInterface.logInfo("=> PW_iConfirmation: " + returnedCode + "(" + returnedCode.getValue() + ")");
-
-                    if (returnedCode == PWRet.OK) {
-                        userInterface.logInfo("\n=== CONFIRMAÇÃO TRANSAÇÃO PENDENTE CONCLUÍDA ===\n");
-                    }
-                }
-                break;
             case PINPADERR:
                 userInterface.showException("Erro de comunição com o PIN-pad", false);
                 break;
@@ -437,45 +461,8 @@ public class Transaction {
         return EventLoop.execute(userInterface, this.displayMessage);
     }
 
-    /**
-     * Método responsável por confirmar uma transação (quando for necessária tal confirmação)
-     */
-    private void finalizeTransaction() {
-        try {
-            this.value = new byte[1000];
-            getResult(PWInfo.CNFREQ);
-            userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
-
-            if (new String(this.value).trim().equals("1")) {
-                userInterface.showException("Esta transação deve ser confirmada", false);
-                userInterface.logInfo("\n\tEsta transação deve ser confirmada\n");
-                Confirmation confirmation = new Confirmation(this, this.getConfirmationParams());
-
-                PWRet ret = confirmation.executeConfirmationProcess();
-
-                if (ret == PWRet.CANCEL) {
-                    abort(false);
-                } else {
-                    userInterface.logInfo("=> PW_iConfirmation: " + ret + "(" + ret.getValue() + ")");
-                }
-            }
-        } catch (Exception e) {
-            userInterface.logInfo("\n\tErro ao confirmar a transação\n");
-        }
-    }
-
-    /**
-     * Método responsável por requisitar à biblioteca PGWebLib os parâmetros para confirmação de uma transação pendente.
-     */
-    private LinkedHashMap<PWInfo, String> getConfirmationParams() {
-        LinkedHashMap<PWInfo, String> confirmationParams = new LinkedHashMap<>();
-
-        for (PWInfo info : Arrays.asList(PWInfo.REQNUM, PWInfo.AUTLOCREF, PWInfo.AUTEXTREF, PWInfo.VIRTMERCH, PWInfo.AUTHSYST)) {
-            this.value = new byte[1000];
-            getResult(info);
-            confirmationParams.put(info, new String(value));
-        }
-
-        return confirmationParams;
+    private PWRet confirmTransaction() {
+        Confirmation confirmation = new Confirmation(userInterface, PGWeb.confirmData);
+        return confirmation.executeConfirmationProcess();
     }
 }

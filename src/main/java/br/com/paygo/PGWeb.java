@@ -1,9 +1,13 @@
 package br.com.paygo;
 
 import br.com.paygo.enums.*;
+import br.com.paygo.interop.Confirmation;
 import br.com.paygo.interop.LibFunctions;
 import br.com.paygo.interop.Transaction;
 import br.com.paygo.ui.UserInterface;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Classe responsável por fazer a interface entre os métodos da biblioteca PGWebLib e a interface de usuário
@@ -13,6 +17,8 @@ public class PGWeb {
     private final UserInterface userInterface;
     private static final String PATH = ".";
     private Transaction transaction;
+
+    public static LinkedHashMap<PWInfo, String> confirmData = new LinkedHashMap<>();
 
     public PGWeb(UserInterface userInterface) {
         this.userInterface = userInterface;
@@ -119,14 +125,32 @@ public class PGWeb {
     }
 
     public void checkPendingConfirmation() {
+        userInterface.logInfo("\n=== CONFIRMAÇÃO ===\n");
+
+        logConfirmData();
+
         try {
-            transaction = new Transaction(PWOper.RPTTRUNC, userInterface);
-            transaction.executeOperation();
+            Confirmation confirmation = new Confirmation(userInterface, confirmData);
+            PWRet returnedCode = confirmation.executeConfirmationProcess();
+
+            if (returnedCode == PWRet.OK) {
+                confirmData.clear();
+            }
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), false);
         }
 
-        transaction.printResultParams();
+        userInterface.logInfo("\n=== CONFIRMAÇÃO CONCLUÍDA ===\n");
+    }
+
+    private void logConfirmData() {
+        userInterface.logInfo("\n=== PARAM CONFIRMACAO ===");
+
+        for (Map.Entry<PWInfo, String> entry: confirmData.entrySet()) {
+            userInterface.logInfo(entry.getKey() + " = " + entry.getValue());
+        }
+
+        userInterface.logInfo("=========================\n");
     }
 
     public void reportTrunc() {
