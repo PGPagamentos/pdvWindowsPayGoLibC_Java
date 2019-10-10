@@ -71,15 +71,18 @@ public class Transaction {
                                  abort = true;
                              }
 
-                            getResult(PWInfo.CNFREQ);
-                            userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
+                             getResult(PWInfo.CNFREQ);
+                             userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
 
-                            if (new String(this.value).trim().equals("1")) {
+                             if (new String(this.value).trim().equals("1")) {
                                 if (confirmTransaction() == PWRet.OK) {
                                     PGWeb.confirmData.clear();
+                                } else {
+                                    abort = true;
+                                    LibFunctions.showMessageOnPINPad("ERRO CONFIRMACAO");
                                 }
-                            }
-                        }
+                             }
+                         }
                     } else {
                         if (returnedCode == PWRet.NOTHING) {
                             continue;
@@ -92,22 +95,32 @@ public class Transaction {
                                     "===========================================");
 
                             PGWeb.confirmData = Confirmation.getConfirmationData(userInterface, true);
+
+                            if (confirmTransaction() == PWRet.OK) {
+                                PGWeb.confirmData.clear();
+                            }
                         } else {
                             if (PGWeb.confirmData.isEmpty()) {
                                 PGWeb.confirmData = Confirmation.getConfirmationData(userInterface, false);
                             }
                         }
 
+                        this.value = new byte[1000];
+
                         getResult(PWInfo.CNFREQ);
-                        userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
+                        userInterface.logInfo("\n" + PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
 
                         if (new String(this.value).trim().equals("1")) {
+                            userInterface.logInfo("É necessário confirmar esta Transação!");
                             if (confirmTransaction() == PWRet.OK) {
                                 PGWeb.confirmData.clear();
+                            } else {
+                                LibFunctions.showMessageOnPINPad("ERRO CONFIRMACAO");
+                                return PWRet.CANCEL;
                             }
                         }
 
-                        return PWRet.OK;
+                        printResultParams();
                     }
                 } while (returnedCode == PWRet.MOREDATA && !abort);
 
@@ -123,22 +136,23 @@ public class Transaction {
                 } else {
                     handleUnexpectedReturnCode(returnedCode);
                 }
+
+                /*
+                getResult(PWInfo.CNFREQ);
+                userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
+
+                if (new String(this.value).trim().equals("1")) {
+                    returnedCode = confirmTransaction();
+                    userInterface.logInfo("=> PW_iConfirmation: " + returnedCode + "(" + returnedCode.getValue() + ")");
+                }
+                */
+                return returnedCode;
             } else {
                 this.getResult(PWInfo.RESULTMSG);
                 userInterface.logInfo("\n\tRESPOSTA: " + getValue(true));
 
                 return returnedCode;
             }
-
-            getResult(PWInfo.CNFREQ);
-            userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
-
-            if (new String(this.value).trim().equals("1")) {
-                returnedCode = confirmTransaction();
-                userInterface.logInfo("=> PW_iConfirmation: " + returnedCode + "(" + returnedCode.getValue() + ")");
-            }
-
-            return returnedCode;
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), true);
             return PWRet.INTERNALERR;
@@ -461,8 +475,23 @@ public class Transaction {
         return EventLoop.execute(userInterface, this.displayMessage);
     }
 
-    private PWRet confirmTransaction() {
+    public PWRet confirmTransaction() {
         Confirmation confirmation = new Confirmation(userInterface, PGWeb.confirmData);
-        return confirmation.executeConfirmationProcess();
+        PWRet ret = confirmation.executeConfirmationProcess();
+
+        if (ret == PWRet.CANCEL) {
+            return ret;
+        }
+
+        value = new byte[1000];
+
+        getResult(PWInfo.RESULTMSG);
+        userInterface.logInfo(PWInfo.RESULTMSG + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
+
+        if (ret == PWRet.OK) {
+            userInterface.logInfo("Confirmação OK");
+        }
+
+        return ret;
     }
 }

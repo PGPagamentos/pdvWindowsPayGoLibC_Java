@@ -1,6 +1,7 @@
 package br.com.paygo;
 
 import br.com.paygo.enums.*;
+import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.interop.Confirmation;
 import br.com.paygo.interop.LibFunctions;
 import br.com.paygo.interop.Transaction;
@@ -130,12 +131,25 @@ public class PGWeb {
         logConfirmData();
 
         try {
+            Confirmation confirmation = new Confirmation(userInterface, PGWeb.confirmData);
+            PWRet ret = confirmation.executeConfirmationProcess();
+            byte[] value = new byte[1000];
+
+            LibFunctions.getResult(PWInfo.RESULTMSG, value);
+            userInterface.logInfo(PWInfo.RESULTMSG + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + TextFormatter.formatByteMessage(value));
+
+            if (ret == PWRet.OK) {
+                userInterface.logInfo("Confirmação OK");
+            }
+
+/*
             Confirmation confirmation = new Confirmation(userInterface, confirmData);
             PWRet returnedCode = confirmation.executeConfirmationProcess();
 
             if (returnedCode == PWRet.OK) {
                 confirmData.clear();
             }
+ */
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), false);
         }
