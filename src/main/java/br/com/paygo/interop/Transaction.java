@@ -94,7 +94,9 @@ public class Transaction {
                                     "== ERRO - EXISTE UMA TRANSAÇÃO PENDENTE ==\n" +
                                     "===========================================");
 
-                            PGWeb.confirmData = Confirmation.getConfirmationData(userInterface, true);
+                            if (PGWeb.confirmData.isEmpty()) {
+                                PGWeb.confirmData = Confirmation.getConfirmationData(userInterface, true);
+                            }
 
                             if (confirmTransaction() == PWRet.OK) {
                                 PGWeb.confirmData.clear();
