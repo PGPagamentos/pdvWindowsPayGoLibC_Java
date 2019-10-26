@@ -141,15 +141,6 @@ public class PGWeb {
             if (ret == PWRet.OK) {
                 userInterface.logInfo("Confirmação OK");
             }
-
-/*
-            Confirmation confirmation = new Confirmation(userInterface, confirmData);
-            PWRet returnedCode = confirmation.executeConfirmationProcess();
-
-            if (returnedCode == PWRet.OK) {
-                confirmData.clear();
-            }
- */
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), false);
         }
@@ -219,8 +210,6 @@ public class PGWeb {
         } catch (Exception e) {
             userInterface.showException(e.getMessage(), false);
         }
-
-        transaction.printResultParams();
 
         return new String(response);
     }

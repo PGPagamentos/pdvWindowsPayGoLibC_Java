@@ -3,13 +3,12 @@ package br.com.paygo.interop;
 import br.com.paygo.enums.PWCnf;
 import br.com.paygo.enums.PWUserDataMessage;
 import com.sun.jna.Native;
-import com.sun.jna.Platform;
 import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.ShortByReference;
 
 public class PGWebLib {
 
-    private static final String libName = Platform.isLinux() ? "PGWebLib.so" : "PGWebLib.dll";
+    private static final String LIB_NAME = "PGWebLib.dll";
     private PGWebLibMap libInterface;
 
     static {
@@ -20,7 +19,7 @@ public class PGWebLib {
 
     public PGWebLib() {
         Native.setProtected(true);
-        this.libInterface = Native.load(libName, PGWebLibMap.class);
+        this.libInterface = Native.load(LIB_NAME, PGWebLibMap.class);
     }
 
     short init(String path) {

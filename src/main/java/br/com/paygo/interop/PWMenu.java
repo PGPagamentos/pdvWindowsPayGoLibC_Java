@@ -91,7 +91,7 @@ public class PWMenu extends Structure {
 
     public PWMenu() {}
 
-    public Field[] getDeclaredFields() {
+    Field[] getDeclaredFields() {
         return this.getClass().getDeclaredFields();
     }
 

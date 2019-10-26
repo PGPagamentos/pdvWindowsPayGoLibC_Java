@@ -45,7 +45,7 @@ public class PWGetData extends Structure {
     public byte omitirMsgAlerta;
     public byte iniciarPelaEsquerda;
     public byte notificarCancelamento;
-    public byte alinharDireita;
+    public byte[] alinharDireita = new byte[1];
 
     PWInfo getIdentificador() {
         return PWInfo.valueOf(this.identificador);
@@ -69,9 +69,9 @@ public class PWGetData extends Structure {
 
     byte getTamanhoMaximo() { return this.tamanhoMaximo; }
 
-    int getValorMinimo() { return this.valorMinimo; }
+    long getValorMinimo() { return this.valorMinimo; }
 
-    int getValorMaximo() { return this.valorMaximo; }
+    long getValorMaximo() { return this.valorMaximo; }
 
     byte getOcultarDadosDigitados() { return this.ocultarDadosDigitados; }
 
@@ -93,7 +93,7 @@ public class PWGetData extends Structure {
 
     byte getCapturarDataVencimentoCartao() { return this.capturarDataVencimentoCartao; }
 
-    public int getTipoEntradaCartao() { return this.tipoEntradaCartao; }
+    long getTipoEntradaCartao() { return this.tipoEntradaCartao; }
 
     byte getItemInicial() { return this.itemInicial; }
 
@@ -109,7 +109,7 @@ public class PWGetData extends Structure {
 
     byte getNotificarCancelamento() { return this.notificarCancelamento; }
 
-    byte getAlinharDireita() { return this.alinharDireita; }
+    byte[] getAlinharDireita() { return this.alinharDireita; }
 
     @Override
     public String toString() {

@@ -27,6 +27,11 @@ public class Transaction {
         put(PWInfo.AUTHTECHUSER, "PAYGOTESTE");
     }};
 
+    private static final Map<PWInfo, String> saleParams = new HashMap<PWInfo, String>() {{
+        put(PWInfo.CURRENCY, "986");
+        put(PWInfo.CURREXP, "2");
+    }};
+
     private boolean selfService = false;
     private final UserInterface userInterface;
     private final ShortByReference numParams;
@@ -39,7 +44,7 @@ public class Transaction {
     public Transaction(PWOper operation, UserInterface userInterface) {
         this.operation = operation;
         this.userInterface = userInterface;
-        this.numParams = new ShortByReference((short)10);
+        this.numParams = new ShortByReference((short)9);
         this.getData = (PWGetData[]) new PWGetData().toArray(numParams.getValue());
         this.externalParams = new HashMap<>();
         this.displayMessage = new byte[128];
@@ -139,15 +144,6 @@ public class Transaction {
                     handleUnexpectedReturnCode(returnedCode);
                 }
 
-                /*
-                getResult(PWInfo.CNFREQ);
-                userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
-
-                if (new String(this.value).trim().equals("1")) {
-                    returnedCode = confirmTransaction();
-                    userInterface.logInfo("=> PW_iConfirmation: " + returnedCode + "(" + returnedCode.getValue() + ")");
-                }
-                */
                 return returnedCode;
             } else {
                 this.getResult(PWInfo.RESULTMSG);
@@ -301,6 +297,16 @@ public class Transaction {
 
             if (ret != PWRet.OK) {
                 throw new MandatoryParamException("Parâmetro obrigatório {" + entry.getKey() + ", " + entry.getValue() + "} inválido.");
+            }
+        }
+
+        if (this.operation == PWOper.SALE) {
+            for (Map.Entry<PWInfo, String> entry : saleParams.entrySet()) {
+                PWRet ret = addParam(entry.getKey(), entry.getValue());
+
+                if (ret != PWRet.OK) {
+                    throw new MandatoryParamException("Parâmetro obrigatório {" + entry.getKey() + ", " + entry.getValue() + "} inválido.");
+                }
             }
         }
 
@@ -477,7 +483,7 @@ public class Transaction {
         return EventLoop.execute(userInterface, this.displayMessage);
     }
 
-    public PWRet confirmTransaction() {
+    private PWRet confirmTransaction() {
         Confirmation confirmation = new Confirmation(userInterface, PGWeb.confirmData);
         PWRet ret = confirmation.executeConfirmationProcess();
 
