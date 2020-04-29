@@ -17,16 +17,14 @@ import java.util.Map;
 public class SwingInterface implements UserInterface {
 
     private final Map<PWOper, String> operations = new LinkedHashMap<PWOper, String>() {{
-        put(PWOper.VERSION, "PWOPER_VERSION");
-        put(PWOper.INSTALL, "PWOPER_INSTALL");
-        put(PWOper.ADMIN, "PWOPER_ADMIN");
-        put(PWOper.SALE, "PWOPER_SALE");
-        put(PWOper.REPRINT, "PWOPER_REPRINT");
-        put(PWOper.SALEVOID, "PWOPER_SALEVOID");
-        put(PWOper.PNDCNF, "Verifica Confirmação Pendente");
-        put(PWOper.RPTTRUNC, "PWOPER_RPTTRUNC");
-        put(PWOper.RPTDETAIL, "PWOPER_RPTDETAIL");
-        put(PWOper.SELFSERV, "Autoatendimento");
+    	put(PWOper.SALE, "Venda");
+    	put(PWOper.SALEVOID, "Cancelamento");
+        put(PWOper.ADMIN, "Administrativa");
+        put(PWOper.REPRINT, "Reimpressão");
+        put(PWOper.INSTALL, "Instalação");
+        put(PWOper.VERSION, "Versão da biblioteca");
+        put(PWOper.RPTTRUNC, "Relatório resumido");
+        put(PWOper.RPTDETAIL, "Relatório detalhado");
     }};
     private final JFrame applicationWindow = new JFrame();
     private final JTextArea logArea = new JTextArea();
@@ -43,28 +41,10 @@ public class SwingInterface implements UserInterface {
         pgWeb = new PGWeb(this);
         pinPadPanel = new PinPadPanel(pgWeb);
         logArea.setEditable(false);
+        // Inicializa a biblioteca de pagamento
+        init();        
+        //Exibe componentes de tela.
         setupWindow();
-        setDefaultParams();
-        init();
-    }
-
-    private void setDefaultParams() {
-        String appName = ApplicationProperties.INSTANCE.getAppName();
-        String appVersion = ApplicationProperties.INSTANCE.getAppVersion();
-
-        String listElement = PWInfo.AUTDEV + "(" + PWInfo.AUTDEV.getValue() + "): " + "AUTOMACAO DE SISTEMAS";
-        listModel.addElement(listElement);
-        listElement = PWInfo.AUTVER + "(" + PWInfo.AUTVER.getValue() + "): " + appVersion;
-        listModel.addElement(listElement);
-        listElement = PWInfo.AUTNAME + "(" + PWInfo.AUTNAME.getValue() + "): " + appName;
-        listModel.addElement(listElement);
-        listElement = PWInfo.AUTCAP + "(" + PWInfo.AUTCAP.getValue() + "): " + "28";
-        listModel.addElement(listElement);
-
-        params.put(PWInfo.AUTDEV, "AUTOMACAO DE SISTEMAS");
-        params.put(PWInfo.AUTVER, appVersion);
-        params.put(PWInfo.AUTNAME, appName);
-        params.put(PWInfo.AUTCAP, "28");
     }
 
     private void setupWindow() {
@@ -201,9 +181,9 @@ public class SwingInterface implements UserInterface {
             }
         });
 
-        JButton pinPadButton = new JButton("Capturar dados usando PIN-pad");
+        JButton pinPadButton = new JButton("Outras funções da biblioteca");
         pinPadButton.addActionListener(e -> {
-            JOptionPane.showMessageDialog(applicationWindow, pinPadPanel, "Capturar dados usando PIN-pad:", JOptionPane.PLAIN_MESSAGE);
+            JOptionPane.showMessageDialog(applicationWindow, pinPadPanel, "PGWebLib - Funções da biblioteca", JOptionPane.PLAIN_MESSAGE);
         });
 
         JPanel bottomPanel = new JPanel();
@@ -280,7 +260,7 @@ public class SwingInterface implements UserInterface {
 
     @Override
     public void saleOnPINPad() {
-        pgWeb.saleOnPINPad();
+        //pgWeb.saleOnPINPad();
     }
 
     @Override

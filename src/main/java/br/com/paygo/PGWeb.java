@@ -3,219 +3,263 @@ package br.com.paygo;
 import br.com.paygo.enums.*;
 import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.interop.Confirmation;
+import br.com.paygo.interop.EventLoop;
 import br.com.paygo.interop.LibFunctions;
+import br.com.paygo.interop.PWGetData;
+import br.com.paygo.interop.PWOperations;
 import br.com.paygo.interop.Transaction;
 import br.com.paygo.ui.UserInterface;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.sun.jna.ptr.LongByReference;
+import com.sun.jna.ptr.ShortByReference;
+
 /**
- * Classe responsável por fazer a interface entre os métodos da biblioteca PGWebLib e a interface de usuário
+ * Classe responsável por fazer a interface entre os métodos da biblioteca
+ * PGWebLib e a interface de usuário
  */
 public class PGWeb {
 
-    private final UserInterface userInterface;
-    private static final String PATH = ".";
-    private Transaction transaction;
+	private final UserInterface userInterface;
+	private static final String PATH = ".";
+	private Transaction transaction;
 
-    public static LinkedHashMap<PWInfo, String> confirmData = new LinkedHashMap<>();
+	public static LinkedHashMap<PWInfo, String> confirmData = new LinkedHashMap<>();
 
-    public PGWeb(UserInterface userInterface) {
-        this.userInterface = userInterface;
-    }
+	public PGWeb(UserInterface userInterface) {
+		this.userInterface = userInterface;
+	}
 
-    public void init() {
-        try {
-            userInterface.logInfo("=== INICIALIZAÇÃO DA BIBLIOTECA ===\n");
-            PWRet returnedCode = LibFunctions.init(PATH);
-            userInterface.logInfo("=> PW_iInit: " + returnedCode.toString());
-        } catch (Exception e) {
-            userInterface.showException("Erro ao iniciar a comunicação.", true);
-        }
-    }
+	public void init() {
+		try {
+			PWRet returnedCode = LibFunctions.init(PATH);
+			if (returnedCode != PWRet.OK)
+				userInterface.showException("Erro ao iniciar a biblioteca: " + returnedCode, true);
+		} catch (Exception e) {
+			userInterface.showException("Erro ao iniciar a comunicação.", true);
+		}
+	}
 
-    public void version() {
-        userInterface.logInfo("\n=== VERIFICAÇÃO DE VERSÃO DA DLL ===\n");
-        transaction = new Transaction(PWOper.VERSION, userInterface);
-        PWRet returnedCode = transaction.executeOperation();
+	public void version() {
+		userInterface.logInfo("\n=== VERIFICAÇÃO DE VERSÃO DA DLL ===\n");
+		transaction = new Transaction(PWOper.VERSION, userInterface);
+		PWRet returnedCode = transaction.executeOperation();
 
-        if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n=== VERIFICAÇÃO DE VERSÃO DA DLL CONCLUÍDA ===\n");
-        }
-    }
+		if (returnedCode == PWRet.OK) {
+			userInterface.logInfo("\n=== VERIFICAÇÃO DE VERSÃO DA DLL CONCLUÍDA ===\n");
+		}
+	}
 
-    public void install() {
-        userInterface.logInfo("\n=== INSTALAÇÃO ===\n");
-        transaction = new Transaction(PWOper.INSTALL, userInterface);
-        PWRet returnedCode = transaction.executeOperation();
+	public void install() {
+		userInterface.logInfo("\n=== INSTALAÇÃO ===\n");
+		transaction = new Transaction(PWOper.INSTALL, userInterface);
+		PWRet returnedCode = transaction.executeOperation();
 
-        if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n=== INSTALAÇÃO CONCLUÍDA ===\n");
-        }
+		if (returnedCode == PWRet.OK) {
+			userInterface.logInfo("\n=== INSTALAÇÃO CONCLUÍDA ===\n");
+		}
 
-        transaction.printResultParams();
-    }
+		transaction.printResultParams();
+	}
 
-    public void admin() {
-        transaction = new Transaction(PWOper.ADMIN, userInterface);
-        PWRet returnedCode = transaction.executeOperation();
+	public void admin() {
+		transaction = new Transaction(PWOper.ADMIN, userInterface);
+		PWRet returnedCode = transaction.executeOperation();
 
-        if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n=== ADMINISTRATIVO CONCLUÍDO ===\n");
-        }
-    }
+		if (returnedCode == PWRet.OK) {
+			userInterface.logInfo("\n=== ADMINISTRATIVO CONCLUÍDO ===\n");
+		}
+	}
 
-    public void sale() {
-        userInterface.logInfo("\n=== VENDA ===\n");
+	public void sale() {
+		userInterface.logInfo("\n=== VENDA ===\n");
 
-        transaction = new Transaction(PWOper.SALE, userInterface);
-        PWRet returnedCode = transaction.executeOperation();
+		transaction = new Transaction(PWOper.SALE, userInterface);
+		PWRet returnedCode = transaction.executeOperation();
 
-        if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n=> VENDA CONCLUÍDA <=\n");
-        }
+		if (returnedCode == PWRet.OK) {
+			userInterface.logInfo("\n=> VENDA CONCLUÍDA <=\n");
+		}
+	}
 
-        transaction.printResultParams();
-    }
+	public void reprint() {
+		userInterface.logInfo("\n=== REIMPRESSÃO ===\n");
+		transaction = new Transaction(PWOper.REPRINT, userInterface);
+		PWRet returnedCode = transaction.executeOperation();
 
-    public void saleOnPINPad() {
-        userInterface.logInfo("\n=== AUTO ATENDIMENTO ===\n");
-        try {
-            transaction = new Transaction(PWOper.SALE, userInterface);
-            PWRet returnedCode = transaction.initInteractionOnPINPad();
+		if (returnedCode == PWRet.OK) {
+			userInterface.logInfo("\n=== REIMPRESSÃO CONCLUÍDA ===\n");
+		}
 
-            if(returnedCode == PWRet.OK) {
-                returnedCode = transaction.executeOperation();
+		transaction.printResultParams();
+	}
 
-                if (returnedCode == PWRet.OK) {
-                    userInterface.logInfo("\n=== AUTO ATENDIMENTO CONCLUÍDO ===\n");
-                }
-            } else {
-                userInterface.logInfo("\n=== AUTO ATENDIMENTO CANCELADO ===\n");
-            }
-        } catch (Exception e) {
-            userInterface.showException(e.getMessage(), true);
-        }
+	public void saleVoid() {
+		userInterface.logInfo("\n=== CANCELAMENTO DE VENDA ===\n");
+		transaction = new Transaction(PWOper.SALEVOID, userInterface);
+		PWRet returnedCode = transaction.executeOperation();
 
-        transaction.printResultParams();
-    }
+		if (returnedCode == PWRet.OK) {
+			userInterface.logInfo("\n=== CANCELAMENTO DE VENDA CONCLUÍDO ===\n");
+		}
 
-    public void reprint() {
-        userInterface.logInfo("\n=== REIMPRESSÃO ===\n");
-        transaction = new Transaction(PWOper.REPRINT, userInterface);
-        PWRet returnedCode = transaction.executeOperation();
+		transaction.printResultParams();
+	}
 
-        if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n=== REIMPRESSÃO CONCLUÍDA ===\n");
-        }
+	public void checkPendingConfirmation() {
+		userInterface.logInfo("\n=== CONFIRMAÇÃO ===\n");
 
-        transaction.printResultParams();
-    }
+		logConfirmData();
 
-    public void saleVoid() {
-        userInterface.logInfo("\n=== CANCELAMENTO DE VENDA ===\n");
-        transaction = new Transaction(PWOper.SALEVOID, userInterface);
-        PWRet returnedCode = transaction.executeOperation();
+		try {
+			Confirmation confirmation = new Confirmation(userInterface, PGWeb.confirmData);
+			PWRet ret = confirmation.executeConfirmationProcess();
+			byte[] value = new byte[1000];
 
-        if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n=== CANCELAMENTO DE VENDA CONCLUÍDO ===\n");
-        }
+			LibFunctions.getResult(PWInfo.RESULTMSG, value);
+			userInterface.logInfo(PWInfo.RESULTMSG + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = "
+					+ TextFormatter.formatByteMessage(value));
 
-        transaction.printResultParams();
-    }
+			if (ret == PWRet.OK) {
+				userInterface.logInfo("Confirmação OK");
+			}
+		} catch (Exception e) {
+			userInterface.showException(e.getMessage(), false);
+		}
 
-    public void checkPendingConfirmation() {
-        userInterface.logInfo("\n=== CONFIRMAÇÃO ===\n");
+		userInterface.logInfo("\n=== CONFIRMAÇÃO CONCLUÍDA ===\n");
+	}
 
-        logConfirmData();
+	private void logConfirmData() {
+		userInterface.logInfo("\n=== PARAM CONFIRMACAO ===");
 
-        try {
-            Confirmation confirmation = new Confirmation(userInterface, PGWeb.confirmData);
-            PWRet ret = confirmation.executeConfirmationProcess();
-            byte[] value = new byte[1000];
+		for (Map.Entry<PWInfo, String> entry : confirmData.entrySet()) {
+			userInterface.logInfo(entry.getKey() + " = " + entry.getValue());
+		}
 
-            LibFunctions.getResult(PWInfo.RESULTMSG, value);
-            userInterface.logInfo(PWInfo.RESULTMSG + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + TextFormatter.formatByteMessage(value));
+		userInterface.logInfo("=========================\n");
+	}
 
-            if (ret == PWRet.OK) {
-                userInterface.logInfo("Confirmação OK");
-            }
-        } catch (Exception e) {
-            userInterface.showException(e.getMessage(), false);
-        }
+	public void reportTrunc() {
+		this.generateReport(PWOper.RPTTRUNC);
+	}
 
-        userInterface.logInfo("\n=== CONFIRMAÇÃO CONCLUÍDA ===\n");
-    }
+	public void reportDetail() {
+		this.generateReport(PWOper.RPTDETAIL);
+	}
 
-    private void logConfirmData() {
-        userInterface.logInfo("\n=== PARAM CONFIRMACAO ===");
+	private void generateReport(PWOper reportType) {
+		transaction = new Transaction(reportType, userInterface);
+		PWRet returnedCode = transaction.executeOperation();
 
-        for (Map.Entry<PWInfo, String> entry: confirmData.entrySet()) {
-            userInterface.logInfo(entry.getKey() + " = " + entry.getValue());
-        }
+		if (returnedCode == PWRet.OK) {
+			userInterface.logInfo("\n=== RELATÓRIO ===\n");
+			byte[] value = new byte[1000];
+			LibFunctions.getResult(PWInfo.RCPTFULL, value);
 
-        userInterface.logInfo("=========================\n");
-    }
+			userInterface.logInfo(new String(value));
 
-    public void reportTrunc() {
-        this.generateReport(PWOper.RPTTRUNC);
-    }
+			userInterface.logInfo("\n=== RELATÓRIO CONCLUÍDO ===\n");
+		}
 
-    public void reportDetail() {
-        this.generateReport(PWOper.RPTDETAIL);
-    }
+		transaction.printResultParams();
+	}
 
-    private void generateReport(PWOper reportType) {
-        transaction = new Transaction(reportType, userInterface);
-        PWRet returnedCode = transaction.executeOperation();
+	public String executeNonTransacionFunction(PWPINPadFunction functionSelecte, PWUserDataMessage message, int minSize,
+			int maxSize, String msgDisplayPP, LongByReference eventCapturaPP) {
+		
+		ShortByReference numParams = new ShortByReference((short) 100);
+		PWOperations[] pwOpers = (PWOperations[]) new PWOperations().toArray(numParams.getValue());
+		
+		PWRet ret = PWRet.OK;
+		String testExampleKey = "12345678901234567890123456789012";
+		String promptMessage = "TESTE DE CAPTURA\nDE PIN BLOCK";
+		String resultAux = new String();
+		byte[] response = new byte[1000];
+		byte[] displayMessage = new byte[50];
+		byte value;
+		int iAux = 0;
 
-        if (returnedCode == PWRet.OK) {
-            userInterface.logInfo("\n=== RELATÓRIO ===\n");
-            byte[] value = new byte[1000];
-            LibFunctions.getResult(PWInfo.RCPTFULL, value);
+		try {
+			switch (functionSelecte) {
 
-            userInterface.logInfo(new String(value));
+			/* Função para a exibição de uma mensagem no PIN-pad */
+			case PW_iPPDisplay:
+				ret = LibFunctions.showMessageOnPINPad(msgDisplayPP);
+				if (ret != PWRet.OK)
+					break;
 
-            userInterface.logInfo("\n=== RELATÓRIO CONCLUÍDO ===\n");
-        }
+				ret = EventLoop.execute(null, displayMessage);
+				if (ret != PWRet.OK)
+					break;
 
-        transaction.printResultParams();
-    }
+				return new String("Mensagem {" + msgDisplayPP + "} exibida com sucesso no PIN-pad");
 
-    public String requestDataOnPinPad(PWData data, PWUserDataMessage message, int minSize, int maxSize) {
-        PWRet ret;
-        String key = "12345678901234567890123456789012";
-        byte[] response = new byte[1000];
+			/* Função para listar todas as operações administrativas e de venda do ponto de captura	*/
+			case PW_iGetOperations:
+				// Define o value como 3, ou seja, PWOPTYPE_ADMIN + PWOPTYPE_SALE
+				value = 3;
+				
+				ret = LibFunctions.pwGetOperations(value, pwOpers, numParams);
+				if(ret != PWRet.OK)
+					break;
+							
+				//Monta lista de operações recebidas na biblioteca
+				iAux = 0;
+				for(PWOperations operAux : pwOpers) {
+					if(iAux >= numParams.getValue())
+						break;
+					
+					resultAux = resultAux + "{" + operAux.getTexto() + "} {" + operAux.getValor() + "}\n";
+					iAux++;
+				}
+				
+				return resultAux;
+				
+			/* Função para obter o PIN Block */
+			case PW_iPPGetPINBlock:
+				if (minSize < 4)
+					throw new Exception("Tamanho mínimo deve ser maior que 4!");
 
-        try {
-            if (minSize > maxSize) {
-                throw new Exception("Tamanho máximo deve ser maior que o tamanho mínimo!");
-            }
+				ret = LibFunctions.getPINBlock(testExampleKey, minSize, maxSize, 30, promptMessage, response);
+				break;
+				
+			/* Função para obter algum dado pré definido do usuário no PIN-pad (ABECS) */
+			case PW_iPPGetUserData:
+				ret = LibFunctions.getUserDataOnPINPad(message, minSize, maxSize, 30, response);
+				break;
+				
+				/*Função para receber o event do PIN-pad, seja de tecla, magnético, chip ou sem contato */
+			case PW_iPPWaitEvent:
+				ret = LibFunctions.waitEventOnPINPad(eventCapturaPP);
+				if (ret != PWRet.OK)
+					break;
 
-            if (data == PWData.PPENTRY) {
-                ret = LibFunctions.getUserDataOnPINPad(message, minSize, maxSize, 30, response);
-            } else {
-                if(minSize < 4) {
-                    throw new Exception("Tamanho mínimo deve ser maior que 4!");
-                }
+				ret = EventLoop.execute(null, displayMessage);
+				if (ret != PWRet.OK)
+					break;
 
-                String promptMessage = "TESTE DE CAPTURA\nDE PIN BLOCK";
-                ret = LibFunctions.getPINBlock(key, minSize, maxSize, 30, promptMessage, response);
-            }
+				return new String("Evento recebido: " + eventCapturaPP.getValue());
+			default:
+				ret = PWRet.CANCEL;
+				break;
 
-            if (ret != PWRet.OK) {
-                userInterface.showException("Erro ao solicitar dado via PIN-pad", false);
-            }
-        } catch (Exception e) {
-            userInterface.showException(e.getMessage(), false);
-        }
+			}
 
-        return new String(response);
-    }
+			if (ret != PWRet.OK) {
+				userInterface.showException("Erro ao solicitar dado via PIN-pad", false);
+			}
+		} catch (Exception e) {
+			userInterface.showException(e.getMessage(), false);
+		}
 
-    public void abort() {
-        this.transaction.abort(false);
-        userInterface.logInfo("\n\n EXECUÇÃO CANCELADA PELO USUÁRIO! \n\n");
-    }
+		return new String(response);
+	}
+
+	public void abort() {
+		this.transaction.abort(false);
+		userInterface.logInfo("\n\n EXECUÇÃO CANCELADA PELO USUÁRIO! \n\n");
+	}
 }

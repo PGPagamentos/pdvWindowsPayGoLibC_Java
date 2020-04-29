@@ -14,7 +14,7 @@ public interface PGWebLibMap extends Library {
     short PW_iConfirmation(int confirmationType, String transacLocalRef, String transacPGWRef,
                            String transacProviderRef, String storeId, String providerName);
     short PW_iIdleProc();
-    short PW_iGetOperations(); // VERIFICAR - não implementado nas outras aplicações
+    short PW_iGetOperations(byte value, PWOperations[] pwOpers, ShortByReference numParams);
 
     short PW_iPPEventLoop(byte[] displayMessage, int displaySize);
     short PW_iPPAbort();

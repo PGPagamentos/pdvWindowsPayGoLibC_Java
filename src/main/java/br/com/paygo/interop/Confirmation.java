@@ -19,14 +19,16 @@ public class Confirmation {
 
     private LinkedHashMap<PWInfo, String> confirmationParams;
     private final UserInterface userInterface;
-    private static final List<PWInfo> requiredConfirmationParams = new LinkedList<PWInfo>() {{
+    @SuppressWarnings("serial")
+	private static final List<PWInfo> requiredConfirmationParams = new LinkedList<PWInfo>() {{
         add(PWInfo.REQNUM);
         add(PWInfo.AUTLOCREF);
         add(PWInfo.AUTEXTREF);
         add(PWInfo.VIRTMERCH);
         add(PWInfo.AUTHSYST);
     }};
-    private static final List<PWInfo> requiredPendingConfirmationParams = new LinkedList<PWInfo>() {{
+    @SuppressWarnings("serial")
+	private static final List<PWInfo> requiredPendingConfirmationParams = new LinkedList<PWInfo>() {{
         add(PWInfo.PNDREQNUM);
         add(PWInfo.PNDAUTLOCREF);
         add(PWInfo.PNDAUTEXTREF);
@@ -41,21 +43,58 @@ public class Confirmation {
 
     public PWRet executeConfirmationProcess() {
         PWCnf confirmationType = retrieveConfirmationType();
-
+        int actionSelected = 0;
+        
+        /* Define e obtém como a transação vai ser confirmada o desfeita
+         * Esse processo pode ser feito de forma automática pela automação, ou seja,
+         * Em determinados pontos da aplicação são marcados os desfazimentos e, caso não ocorra
+         * nenhum tipo de erro, por exemplo falha na impressão, queda de energia, entre outros, 
+         * a transação é confirmada automaticamente. 
+         * Lembrando que esse comportamento não está implementado, é uma sugestão as automações!*/
         if (confirmationType == null) {
             return PWRet.CANCEL;
         }
+        actionSelected = retrieveAction();
 
-        int actionSelected = retrieveAction();
-
+        // Caso os dados da confirmação/desfazimento forem inseridos manualmente
         if (actionSelected == 1) {
             retrieveConfirmationData();
-        } else if (confirmationParams.isEmpty()) {
+        }
+        // Verifica se foram capturados os parâmetros de confirmação/desfazimento
+        else if (confirmationParams.isEmpty()) {
             userInterface.showException("Parâmetros para uma confirmação automática não foram encontrados", false);
             return PWRet.CANCEL;
         }
 
-        return LibFunctions.confirmTransaction(confirmationType, new LinkedList<>(PGWeb.confirmData.values()));
+        //Envia para a biblioteca de pagamento a confirmação com os valores informados (automaticamente ou manual).
+        PWRet pwRet = LibFunctions.confirmTransaction(confirmationType, new LinkedList<>(PGWeb.confirmData.values()));
+        if(pwRet != PWRet.OK)
+                 return pwRet;
+
+        /*
+         * Conforme a arquitetura utilizada pela automação, esse ponto poderá estar rodando em uma thread.
+         * Portanto o tratamento abaixo é feito para que a thread não seja interrompida até que a confirmação
+         * seja enviada ao servidor.
+         * 
+         * Para versões de biblioteca iguais ou superiores a 4.0.96.0, poderá ser utilizada a função:
+         * PW_iWaitConfirmation
+         * */
+        PWRet iRet = null;
+        byte[] displayMessage = new byte[100];
+
+		for (;;) {
+			iRet = LibFunctions.eventLoop(displayMessage);
+			if (iRet != PWRet.NOTHING)
+				break;
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		/* Fim do tratamento */
+        return pwRet;
+
     }
 
     /**

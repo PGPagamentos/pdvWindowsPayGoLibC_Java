@@ -43,7 +43,7 @@ public class CMDInterface implements UserInterface {
 
     @Override
     public void saleOnPINPad() {
-        pgWeb.saleOnPINPad();
+        //pgWeb.saleOnPINPad();
     }
 
     @Override

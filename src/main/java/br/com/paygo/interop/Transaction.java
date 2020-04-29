@@ -7,10 +7,8 @@ import br.com.paygo.exceptions.MandatoryParamException;
 import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.helper.UserInputHandler;
 import br.com.paygo.ui.UserInterface;
-import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.ShortByReference;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,20 +17,21 @@ import java.util.Map;
  */
 public class Transaction {
 
-    private static final Map<PWInfo, String> mandatoryParams = new HashMap<PWInfo, String>() {{
-        put(PWInfo.AUTDEV, "AUTOMACAO DE SISTEMAS");
-        put(PWInfo.AUTVER, ApplicationProperties.INSTANCE.getAppVersion());
-        put(PWInfo.AUTNAME, ApplicationProperties.INSTANCE.getAppName());
-        put(PWInfo.AUTCAP, "28");
-        put(PWInfo.AUTHTECHUSER, "PAYGOTESTE");
+    @SuppressWarnings("serial")
+	private static final Map<PWInfo, String> mandatoryParams = new HashMap<PWInfo, String>() {{
+        put(PWInfo.AUTDEV, "AUTOMACAO DE SISTEMAS"); // Automação deve ALTERAR esse campo!!
+        put(PWInfo.AUTVER, ApplicationProperties.INSTANCE.getAppVersion()); // Automação deve ALTERAR esse campo!!
+        put(PWInfo.AUTNAME, ApplicationProperties.INSTANCE.getAppName()); // Automação deve ALTERAR esse campo!!
+        put(PWInfo.AUTCAP, "28"); // Automação deve ALTERAR esse campo!!
+        put(PWInfo.AUTHTECHUSER, "PAYGOTESTE"); // Automação deve ALTERAR esse campo!!
     }};
 
-    private static final Map<PWInfo, String> saleParams = new HashMap<PWInfo, String>() {{
+    @SuppressWarnings("serial")
+	private static final Map<PWInfo, String> saleParams = new HashMap<PWInfo, String>() {{
         put(PWInfo.CURRENCY, "986");
         put(PWInfo.CURREXP, "2");
     }};
 
-    private boolean selfService = false;
     private final UserInterface userInterface;
     private final ShortByReference numParams;
     private PWOper operation;
@@ -52,173 +51,324 @@ public class Transaction {
     }
 
     /**
-     * Método responsável por executar o fluxo completo de uma transação (Inicialização, envio de parâmetros e finalização/confirmação)
+     * Método responsável por iniciar um tipo de transação, refletindo diretamento ao
+     * PW_iNewTransac da PGWebLib.
+     * */
+    private PWRet start() throws Exception {
+    	//Executa a função de nova transação da biblioteca de pagamento PGWebLib
+        PWRet ret = LibFunctions.newTransaction(this.operation);
+
+        // Caso a chamada de inicio de nova transação deu certo, adiciona os parâmetros
+        // informados antes do inicio da transação. Caso exista, por exemplo:
+        // Tipo de cartão, tipo de financiamento, etc...        
+        if (ret == PWRet.OK) {
+            userInterface.logInfo("=> PW_iNewTransac: " + ret + "(" + ret.getValue() + ")");
+            // Adiciona os parâmetros mandatórios da transação
+            this.addMandatoryParams();
+
+            // Adiciona os parâmetros pré informados antes da transação.
+            externalParams = userInterface.getParams();
+            
+			if (externalParams != null && !externalParams.isEmpty()) 
+			{			
+				Map.Entry<PWInfo, String> entry = externalParams.entrySet().iterator().next();
+				while (entry != null && !externalParams.isEmpty()) 
+				{
+					this.addParam(entry.getKey(), entry.getValue());
+					externalParams.remove(entry.getKey());
+					if (externalParams != null && !externalParams.isEmpty())
+						entry = externalParams.entrySet().iterator().next();
+				}
+			}
+		}
+
+        return ret;
+    }
+    
+    /**
+     * Método responsável pelo processamento da transação, ou seja, ele realizará todas as capturas de dados,
+     * impressões de comprovantes, obtenção de dados da transação e confirmação/desfazimento da transação.
      */
-    public PWRet executeOperation() {
-        PWRet returnedCode;
-        boolean abort = false;
+	public PWRet executeOperation() {
+		PWRet returnedCode;
+		boolean abort = false;
 
-        try {
-            // inicia a transação
-            returnedCode = this.start();
+		try {
+			/* Inicia a transação PW_iNewTransac */
+			returnedCode = this.start();
 
-            if (returnedCode == PWRet.OK) {
-                do {
-                    returnedCode = this.executeTransaction();
-                    userInterface.logInfo("=> PW_iExecTransac: " + returnedCode + "(" + returnedCode.getValue() + ")");
+			/* Caso ocorreu algum erro, retorna. */
+			if (returnedCode != PWRet.OK) {
+				this.getResult(PWInfo.RESULTMSG);
+				userInterface.logInfo("\n\tRESPOSTA: " + getValue(true));
+				return returnedCode;
+			}
 
-                    // verifica se precisam ser informados mais parâmetros para a transação
-                    if (returnedCode == PWRet.MOREDATA) {
-                        PWRet moreDataRet = this.retrieveMoreData();
+			/*
+			 * Loop principal de captura de dados (função PW_iExecTransac)
+			 * Toda captura de dados digitados, menus, interação com PIN-pad (PP_iEventLoop)
+			 * serão feitas nessa sessão.
+			 * */
+			do {
+				/* Chama o PW_iExecTransac da biblioteca de pagamento PGWebLib */
+				returnedCode = this.executeTransaction();
+				userInterface.logInfo("=> PW_iExecTransac: " + returnedCode + "(" + returnedCode.getValue() + ")");
 
-                         if (moreDataRet != PWRet.OK) {
-                             if (moreDataRet == PWRet.CANCEL) {
-                                 abort = true;
-                             }
+				/* Verifica se precisam ser informados mais parâmetros para a transação */
+				if (returnedCode == PWRet.MOREDATA) {
+					/* Faz a captura dos dados solicitados pela PGWebLib */
+					PWRet moreDataRet = this.retrieveMoreData();
+					/* Caso ocorra algum erro ou usuário cancele a captura */
+					if (moreDataRet != PWRet.OK)
+						return moreDataRet;
+				}
+				/* Caso não deva ser feita nenhuma ação, chama novamente o iExecTransac */
+				else if(returnedCode == PWRet.NOTHING)
+					continue;
+			} while (returnedCode == PWRet.MOREDATA && !abort);
+			
+			/* Caso exista pendências */
+			if (returnedCode == PWRet.FROMHOSTPENDTRN) {
+				pendingTransaction();
+				return returnedCode;
+			}
+			
+			/* Caso a transaçao foi concluída, imprime os comprovantes */
+			else if (returnedCode == PWRet.OK) {
+				this.printReceipt();
+			}
+			
+			/* Exibe todos os parâmetros da transação que a biblioteca retornou */
+			printResultParams();
+			
+			/* Verifica se a transação necessita de confirmação e realiza */
+			returnedCode = confirmationTransaction();
+			if(returnedCode != PWRet.OK)
+				return returnedCode;
+			
+			/* Verificação e execução, caso necessário da função IdleProc */
+			executeIdleProc();
+			
+			return returnedCode;
 
-                             getResult(PWInfo.CNFREQ);
-                             userInterface.logInfo(PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
+		} catch (Exception e) {
+			userInterface.showException("Ocorreu um erro: {"+e.getMessage()+"}", true);
+			return PWRet.INTERNALERR;
+		}
+	}
+	
+	/**
+	 * Método responsável pela verificação e execução do IdleProc
+	 * */
+	private void executeIdleProc() {
+		// TODO Auto-generated method stub
+		
+	}
 
-                             if (new String(this.value).trim().equals("1")) {
-                                if (confirmTransaction() == PWRet.OK) {
-                                    PGWeb.confirmData.clear();
-                                } else {
-                                    abort = true;
-                                    LibFunctions.showMessageOnPINPad("ERRO CONFIRMACAO");
-                                }
-                             }
-                         }
-                    } else {
-                        if (returnedCode == PWRet.NOTHING) {
-                            continue;
-                        }
+	/**
+     * Método responsável por tratar a captura de dados da PGWebLib 
+     */
+	private PWRet retrieveMoreData() throws InvalidDataType {
+		PWRet response = PWRet.OK;
+		PWRet eventLoopResponse = PWRet.OK;
 
-                        if (returnedCode == PWRet.FROMHOSTPENDTRN) {
-                            userInterface.showException("Existe uma transação pendente", false);
-                            userInterface.logInfo("===========================================\n" +
-                                    "== ERRO - EXISTE UMA TRANSAÇÃO PENDENTE ==\n" +
-                                    "===========================================");
+		/*
+		 * A Biblioteca pode retornar mais de uma captura por interação, por isso existe
+		 * o loop abaixo. Assim, mais de um dado, por exemplo um dado digita e uma
+		 * captura de menu poderão ser solicitados em uma única interação.
+		 */
+		for (short index = 0; index < this.numParams.getValue(); index++) {
+			PWGetData pwGetData = this.getData[index];
+			PWInfo identifier = pwGetData.getIdentificador();
 
-                            if (PGWeb.confirmData.isEmpty()) {
-                                PGWeb.confirmData = Confirmation.getConfirmationData(userInterface, true);
-                            }
+			// Em qual tag será informado o dado captura e qual o tipo de dado solicitado
+			userInterface.logInfo("=> Dado requisitado = " + identifier + " | Tipo de Dado = " + pwGetData.getTipoDeDado());
 
-                            if (confirmTransaction() == PWRet.OK) {
-                                PGWeb.confirmData.clear();
-                            }
-                        } else {
-                            if (PGWeb.confirmData.isEmpty()) {
-                                PGWeb.confirmData = Confirmation.getConfirmationData(userInterface, false);
-                            }
-                        }
+			switch (pwGetData.getTipoDeDado()) {
+			case MENU:
+				String optionSelected;
 
-                        this.value = new byte[1000];
+				Menu menu = new Menu(pwGetData);
+				/* TODO: A montagem do menu deve considerar os parâmetros: 
+				 * bTeclasDeAtalho -> Caso esteja sinalizado, o menu deverá suportar Hotkeys (atalhos)
+				 * bItemInicial -> Opção inicial no menu que deve ser destacada.
+				*/
+				optionSelected = UserInputHandler.requestSelectionFromMenu(userInterface, menu);
 
-                        getResult(PWInfo.CNFREQ);
-                        userInterface.logInfo("\n" + PWInfo.CNFREQ + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
+				if (optionSelected.equals("-1")) {
+					response = PWRet.CANCEL;
+				} else {
+					this.addParam(identifier, optionSelected);
+				}
 
-                        if (new String(this.value).trim().equals("1")) {
-                            userInterface.logInfo("É necessário confirmar esta Transação!");
-                            if (confirmTransaction() == PWRet.OK) {
-                                PGWeb.confirmData.clear();
-                            } else {
-                                LibFunctions.showMessageOnPINPad("ERRO CONFIRMACAO");
-                                return PWRet.CANCEL;
-                            }
-                        }
+				break;
+			case USERAUTH:
+				String password = UserInputHandler.getTypedData(userInterface, "Digite a senha:", 20, 4,
+						PWValidDataEntry.ALPHANUMERIC);
+				// Esse tipo de captura não é validado pela PGWebLib e sim pela automação. Portanto, caso a automação veja necessidade
+				// Ela poderá validar a senha inserida pelo operador nesse momento.
+				this.addParam(identifier, password);
+				break;
+			case TYPED:
+				String typedData;
+				
+				/*
+				 * TODO: Os seguintes parâmetros devem ser considerados:
+				 * bOcultarDadosDigitados -> Dados devem ser exibidos mascarados.
+				 * 
+				 * # Caso o tipo de entrada for numérico:
+				 * ulValorMinimo, ulValorMaximo e as mensagens szMsgDadoMenor e szMsgDadoMaior 
+				 * bValidacaoDado -> Caso falhe, apresentar szMsgValidacao
+				 * 
+				 * Se a bValidacaoDado == 6, iniciando com szValorInicial, verificar que os dois dados são iguais
+				 * na segunda solicitação deve substituir o szPrompt por szMsgConfirmacao
+				 * 
+				 * iniciarPelaEsquerda -> Inicia preenchimento do dado pela esquerda. 
+                 * alinharDireita -> Alinha o dado capturado a direita.
+				 * */
+				typedData = UserInputHandler.getTypedData(userInterface, pwGetData.getPrompt(),
+						pwGetData.getTamanhoMaximo(), pwGetData.getTamanhoMinimo(), pwGetData.getTipoEntradaPermitido(),
+						pwGetData.getValorInicial(), pwGetData.getMascaraDeCaptura());
 
-                        printResultParams();
-                    }
-                } while (returnedCode == PWRet.MOREDATA && !abort);
+				if (typedData.equals("-1")) {
+					response = PWRet.CANCEL;
+				} else {
+					this.addParam(identifier, typedData);
+				}
+				break;
+			case PPREMCRD:				
+				PWRet ret = LibFunctions.removeCardFromPINPad();
+				userInterface.logInfo("=> PW_iPPRemoveCard: " + ret + "(" + ret.getValue() + ")");
 
-                if (abort) {
-                    return PWRet.CANCEL;
-                } else if (returnedCode == PWRet.OK) {
-                    if (this.operation == PWOper.SALE || this.operation == PWOper.REPRINT) {
-                        this.printReceipt();
-                    }
+				eventLoopResponse = executeEventLoop();
+				response = eventLoopResponse;
+				break;
+			case CARDINF:
+				/*
+				 * TODO: Todo as mensagens de display estãos endo mostradas na caixa de log da UI
+				 * Hoje, caso a captura do cartão não for somente digitado, ou seja, ele aceita chip e digitado
+				 * o usuário não tem como realizar a transação digitada.
+				 * 
+				 * Deveria haver uma caixa de texto (exemplo) com a mensagem de processando e, no caso dessa captura,
+				 * caso ocorresse um evento de tecla, o PIN-pad seria abortado e feita a captura digitada.
+				 * */
+				userInterface.logInfo(pwGetData.getPrompt());
+				if (pwGetData.getTipoEntradaCartao() == 1) { // digitado
+					System.out.println("Digite o numero do cartão");
 
-                    this.getResult(PWInfo.RESULTMSG);
-                    userInterface.logInfo("\n\tRESPOSTA: " + getValue(true));
-                } else {
-                    handleUnexpectedReturnCode(returnedCode);
-                }
+					String cardNumber = UserInputHandler.getTypedData(userInterface, "Digite o numero do cartão:", 20,
+							16, PWValidDataEntry.NUMERIC);
 
-                return returnedCode;
-            } else {
-                this.getResult(PWInfo.RESULTMSG);
-                userInterface.logInfo("\n\tRESPOSTA: " + getValue(true));
+					addParam(PWInfo.CARDFULLPAN, cardNumber);
+				} else { // pin-pad
+					userInterface.logInfo("CAPTURA DE DADOS DO PIN-PAD");
+					ret = LibFunctions.getCardFromPINPad(index);
+					userInterface.logInfo("=> PW_iPPGetCard: " + ret + "(" + ret.getValue() + ")");
+					eventLoopResponse = executeEventLoop();
+					response = eventLoopResponse;
+				}
+				break;
+			case CARDOFF:
+				ret = LibFunctions.offlineCardProcessing(index);
+				userInterface.logInfo("=> PW_iPPGoOnChip: " + ret + "(" + ret.getValue() + ")");
+				eventLoopResponse = executeEventLoop();
+				response = eventLoopResponse;
+				break;
+			case CARDONL:
+				ret = LibFunctions.finishOfflineProcessing(index);
+				userInterface.logInfo("=> PW_iPPFinishChip: " + ret + "(" + ret.getValue() + ")");
+				eventLoopResponse = executeEventLoop();
+				response = eventLoopResponse;
+				break;
+			case PPENCPIN:
+				ret = LibFunctions.getPIN(index);
+				userInterface.logInfo("=> PW_iPPGetPIN: " + ret + "(" + ret.getValue() + ")");
+				eventLoopResponse = executeEventLoop();
+				response = eventLoopResponse;
+			case BARCODE:
+				// Caso seja de escopo da automação, aqui é a interface onde é capturado o código
+				// de barra, podendo ser digitada.
+				break;
+			case PPCONF:
+				ret = LibFunctions.ppConfirmationData(index);
+				userInterface.logInfo("=> PW_iPPConfirmData: " + ret + "(" + ret.getValue() + ")");
+				eventLoopResponse = executeEventLoop();
+				response = eventLoopResponse;
+				break;
+			case PPDATAPOSCNF:
+				ret = LibFunctions.ppPositiveConfirmation(index);
+				userInterface.logInfo("=> PW_iPPPositiveConfirmation: " + ret + "(" + ret.getValue() + ")");
+				eventLoopResponse = executeEventLoop();
+				response = eventLoopResponse;
+				break;
+			case PPENTRY:
+				ret = LibFunctions.ppGetData(index);
+				userInterface.logInfo("=> PW_iPPGetData: " + ret + "(" + ret.getValue() + ")");
+				eventLoopResponse = executeEventLoop();
+				response = eventLoopResponse;
+				break;
+			case PPGENCMD:
+				ret = LibFunctions.ppGenericCommand(index);
+				userInterface.logInfo("=> PW_iPPGenericCMD: " + ret + "(" + ret.getValue() + ")");
+				eventLoopResponse = executeEventLoop();
+				response = eventLoopResponse;
+				break;
+			default:
+				break;
+			}
 
-                return returnedCode;
-            }
-        } catch (Exception e) {
-            userInterface.showException(e.getMessage(), true);
-            return PWRet.INTERNALERR;
-        }
+		}
+
+		return response;
+	}
+	
+	/**
+	 * Método responsável pela confirmação da transação caso haja necessidade.
+	 * */
+	private PWRet confirmationTransaction() {
+		this.value = new byte[1000];
+		PWRet returnedCode = PWRet.OK;
+		
+		/* Verifica se a transação necessita de confirmação
+		 * 0 - Não necessita
+		 * 1 - Necessita */
+		getResult(PWInfo.CNFREQ);
+		if (new String(this.value).trim().equals("1")) 
+		{
+			// Obtém os dados da última transação efetuada pela biblioteca de pagamento
+			PGWeb.confirmData = Confirmation.getConfirmationData(userInterface, false);
+			
+			// Inicia o processo de confirmação
+			returnedCode = confirmTransaction();
+		}		
+		return returnedCode;
+	}
+	
+	/**
+	 * Método responsável por resolver a pendência de confirmação/desfazimento entre
+	 * transação do ponto de captura e o servidor.
+	 * */
+	private void pendingTransaction() {
+		// Caso haja uma transação pendente de confirmação, captura os dados e envia.
+		userInterface.showException("Existe uma transação pendente", false);
+		userInterface.logInfo("===========================================\n"
+				+ "== ERRO - EXISTE UMA TRANSAÇÃO PENDENTE ==\n" + "===========================================");
+
+		if (PGWeb.confirmData.isEmpty()) {
+			PGWeb.confirmData = Confirmation.getConfirmationData(userInterface, true);
+		}
+
+		if (confirmTransaction() == PWRet.OK) {
+			PGWeb.confirmData.clear();
+		}
+	}    
+
+    private PWRet getResult(PWInfo param) {
+        return LibFunctions.getResult(param, value);
     }
-
-    public PWRet initInteractionOnPINPad() throws Exception {
-        PINPad pinPad = PINPad.getInstance();
-        LongByReference event = new LongByReference(0);
-        int eventResponse = 0;
-        PWRet ret;
-
-        ret = pinPad.displayMessage("INSIRA OU PASSE O CARTAO");
-
-        if (ret != PWRet.OK) {
-            userInterface.showException("Erro ao exibir mensagem no PIN-pad.", false);
-            return PWRet.PINPADERR;
-        }
-
-        do {
-            ret = LibFunctions.eventLoop(this.displayMessage);
-
-            if (ret == PWRet.TIMEOUT) {
-                userInterface.showException("Timeout!", false);
-                return PWRet.TIMEOUT;
-            }
-        } while (ret != PWRet.OK);
-
-        ret = LibFunctions.waitEventOnPINPad(event);
-
-        if (ret != PWRet.OK) {
-            userInterface.showException("Erro no wait event do PIN_pad", false);
-            return PWRet.PINPADERR;
-        }
-
-        do {
-            Thread.sleep(500);
-
-            ret = LibFunctions.eventLoop(this.displayMessage);
-
-            if (ret == PWRet.TIMEOUT) {
-                return PWRet.TIMEOUT;
-            }
-
-            if (ret == PWRet.OK) {
-                eventResponse = (int)event.getValue();
-
-                if(eventResponse == PWPINPadInput.KEYCANC.getValue()) {
-                    this.abort(true);
-                    return PWRet.CANCEL;
-                }
-            }
-        } while (!Arrays.asList(PWPINPadInput.MAGSTRIPE.getValue(), PWPINPadInput.ICC.getValue(), PWPINPadInput.CTLS.getValue()).contains(eventResponse));
-
-        ret = pinPad.displayMessage("PROCESSANDO...");
-
-        if (ret != PWRet.OK) {
-            userInterface.showException("Erro ao exibir mensagem no PIN-pad.", false);
-            return PWRet.PINPADERR;
-        }
-
-        this.selfService = true;
-
-        return PWRet.OK;
-    }
-
-    private void getResult(PWInfo param) {
-        LibFunctions.getResult(param, value);
+    
+    public String getValue(boolean formatted) {
+        return formatted ? TextFormatter.formatByteMessage(this.value) : new String(this.value);
     }
 
     /**
@@ -227,27 +377,32 @@ public class Transaction {
     public void abort(boolean isPINPad) {
         if (isPINPad) {
             PWRet ret = LibFunctions.abortTransaction();
-            userInterface.logInfo("=> PW_iPPAbort: " + ret + "(" + ret.getValue() + ")");
-
-            LibFunctions.showMessageOnPINPad("OPERACAO\nCANCELADA");
+            userInterface.logInfo("=> PW_iPPAbort: " + ret + "(" + ret.getValue() + ")");            
+            executeEventLoop();
         }
-
         userInterface.showException("Transação cancelada", false);
         userInterface.logInfo("\n\t--------- OPERAÇÃO CANCELADA ---------\n");
     }
 
     private void printReceipt() {
-        userInterface.logInfo("\n\t------ VIA ESTABELECIMENTO ------");
-        getResult(PWInfo.RCPTMERCH);
-        userInterface.logInfo(this.getValue(false));
-
-        userInterface.logInfo("\n\t------ VIA CLIENTE ------");
-        getResult(PWInfo.RCPTCHOLDER);
-        userInterface.logInfo(this.getValue(false));
-    }
-
-    public String getValue(boolean formatted) {
-        return formatted ? TextFormatter.formatByteMessage(this.value) : new String(this.value);
+    	// Tamanho do comprovante pode ser até 32000 
+    	this.value = new byte[32000];
+    	PWRet returnedCode;
+    	// Caso exista via do estabelecimento, imprime!
+    	returnedCode = getResult(PWInfo.RCPTMERCH);		
+		if (returnedCode == PWRet.OK) {
+			userInterface.logInfo("\n\t------ VIA ESTABELECIMENTO ------");
+			userInterface.logInfo(this.getValue(false));
+			userInterface.logInfo("\n\t---- FIM VIA ESTABELECIMENTO ----");
+		}
+		
+		// Caso exista via do estabelecimento, imprime!
+		returnedCode = getResult(PWInfo.RCPTCHOLDER);
+		if (returnedCode == PWRet.OK) {
+			userInterface.logInfo("\n\t------ VIA CLIENTE ------");			
+			userInterface.logInfo(this.getValue(false));
+			userInterface.logInfo("\n\t---- FIM VIA CLIENTE ----");
+		}
     }
 
     /**
@@ -259,8 +414,8 @@ public class Transaction {
 
         userInterface.logInfo("============== PARAMETROS ==============");
 
-        // é feito uma varredura de todos os valores de 0 a Short.MAX_VALUE
-        // poderia ser feita uma iteração sob os valores de PWInfo, mas nem todos os parâmetros possíveis estão mapeados
+        /* Loga todos os parâmetros que a PGWebLib devolveu para a transação
+         * Esse parâmetros poderão ser utilizados pela automação caso forem úteis*/
         for (int i = 0; i < Short.MAX_VALUE; i++) {
             tempValue = new byte[1000];
 
@@ -273,25 +428,13 @@ public class Transaction {
         userInterface.logInfo("========================================\n");
     }
 
-    private PWRet start() throws Exception {
-        PWRet ret = LibFunctions.newTransaction(this.operation);
-
-        if (ret == PWRet.OK) {
-            userInterface.logInfo("=> PW_iNewTransac: " + ret + "(" + ret.getValue() + ")");
-            this.addMandatoryParams();
-
-            externalParams = userInterface.getParams();
-        }
-
-        return ret;
-    }
-
     /**
      * Método responsável por enviar para a biblioteca PGWebLib os parâmetros obrigatórios para uma transação
      */
     private void addMandatoryParams() throws MandatoryParamException {
         userInterface.logInfo("\nAdicionando parâmetros obrigatórios: ");
 
+        // Adiciona os parâmetros mandatórios
         for (Map.Entry<PWInfo, String> entry : mandatoryParams.entrySet()) {
             PWRet ret = addParam(entry.getKey(), entry.getValue());
 
@@ -300,7 +443,9 @@ public class Transaction {
             }
         }
 
-        if (this.operation == PWOper.SALE) {
+        // Adiciona os parâmetros de moeda e expoente da moeda
+        if (this.operation == PWOper.SALE || this.operation == PWOper.SALEVOID ||
+        		this.operation == PWOper.PREAUTH || this.operation == PWOper.SALEPRE|| this.operation == PWOper.CASHWDRWL) {
             for (Map.Entry<PWInfo, String> entry : saleParams.entrySet()) {
                 PWRet ret = addParam(entry.getKey(), entry.getValue());
 
@@ -314,192 +459,29 @@ public class Transaction {
     }
 
     private PWRet addParam(PWInfo param, String data) {
-        PWRet code = LibFunctions.addParam(param, data);
+        PWRet returnedCode = LibFunctions.addParam(param, data);
         userInterface.logInfo("=> PW_iAddParam (" + param.getValue() + " - " + param + "): " + data);
-
-        return code;
+        return returnedCode;
     }
 
     private PWRet executeTransaction() {
         return LibFunctions.executeTransaction(getData, numParams);
-    }
-
-    /**
-     * Método responsável por solicitar e enviar parâmetros para a biblioteca PGWebLib
-     */
-    private PWRet retrieveMoreData() throws InvalidDataType {
-        PWRet response = PWRet.OK;
-        boolean abortPINPad = false;
-
-        for (short index = 0; index < this.numParams.getValue(); index++) {
-            PWGetData pwGetData = this.getData[index];
-            PWInfo identifier = pwGetData.getIdentificador();
-
-            userInterface.logInfo("Dado requisitado = " + identifier + " | Tipo de Dado = " + pwGetData.getTipoDeDado());
-
-            if (identifier != PWInfo.NONE && externalParams.containsKey(identifier)) {
-                String paramValue = externalParams.get(identifier);
-                externalParams.remove(identifier);
-
-                this.addParam(identifier, paramValue);
-            } else {
-                PWRet eventLoopResponse = PWRet.OK;
-
-                switch (pwGetData.getTipoDeDado()) {
-                    case MENU:
-                        String optionSelected;
-
-                        if (this.selfService) {
-                            if (pwGetData.getNumOpcoesMenu() > 3) {
-                                userInterface.showException("Tamanho do menu é muito grande", false);
-                                response = PWRet.CANCEL;
-                                abortPINPad = true;
-                            } else {
-                                PINPad pinPad = PINPad.getInstance();
-                                try {
-                                    optionSelected = pinPad.getMenuSelection(pwGetData.getMenu(), pwGetData.getNumOpcoesMenu(), this.displayMessage);
-
-                                    if (optionSelected.equals("-1")) {
-                                        response = PWRet.CANCEL;
-                                        abortPINPad = true;
-                                    } else {
-                                        this.addParam(identifier, optionSelected);
-                                    }
-                                } catch (Exception e) {
-                                    userInterface.showException(e.getMessage(), false);
-                                    response = PWRet.CANCEL;
-                                }
-                            }
-                        } else {
-                            Menu menu = new Menu(pwGetData);
-                            optionSelected = UserInputHandler.requestSelectionFromMenu(userInterface, menu);
-
-                            if (optionSelected.equals("-1")) {
-                                response = PWRet.CANCEL;
-                            } else {
-                                this.addParam(identifier, optionSelected);
-                            }
-                        }
-                        break;
-                    case USERAUTH:
-                        String password = UserInputHandler.getTypedData(userInterface, "Digite a senha:",
-                                20, 4, PWValidDataEntry.ALPHANUMERIC);
-                        this.addParam(identifier, password);
-                        break;
-                    case TYPED:
-                        String typedData;
-
-                        if (identifier == PWInfo.TOTAMNT && selfService) {
-                            typedData = "100";
-                        } else {
-                            typedData = UserInputHandler.getTypedData(userInterface, pwGetData.getPrompt(),
-                                    pwGetData.getTamanhoMaximo(), pwGetData.getTamanhoMinimo(),
-                                    pwGetData.getTipoEntradaPermitido(), pwGetData.getValorInicial(),
-                                    pwGetData.getMascaraDeCaptura());
-                        }
-
-                        if (typedData.equals("-1")) {
-                           response = PWRet.CANCEL;
-                        } else {
-                            this.addParam(identifier, typedData);
-                        }
-                        break;
-                    case PPREMCRD:
-                        System.out.println("Saindo do fluxo pelo RemoveCard: " + pwGetData.getPrompt());
-                        PWRet ret = LibFunctions.removeCardFromPINPad();
-                        userInterface.logInfo("=> PW_iPPRemoveCard: " + ret + "(" + ret.getValue() + ")");
-
-                        eventLoopResponse = executeEventLoop();
-                        break;
-                    case CARDINF:
-                        userInterface.logInfo(pwGetData.getPrompt());
-                        if (pwGetData.getTipoEntradaCartao() == 1) { // digitado
-                            System.out.println("Digite o numero do cartão");
-
-                            String cardNumber = UserInputHandler.getTypedData(userInterface,
-                                    "Digite o numero do cartão:", 20,
-                                    16, PWValidDataEntry.NUMERIC);
-
-                            addParam(PWInfo.CARDFULLPAN, cardNumber);
-                        } else { // pin-pad
-                            userInterface.logInfo("CAPTURA DE DADOS DO PIN-PAD");
-                            ret = LibFunctions.getCardFromPINPad(index);
-                            userInterface.logInfo("=> PW_iPPGetCard: " + ret + "(" + ret.getValue() + ")");
-                            eventLoopResponse = executeEventLoop();
-                        }
-                        break;
-                    case CARDOFF:
-                        ret = LibFunctions.offlineCardProcessing(index);
-                        userInterface.logInfo("=> PW_iPPGoOnChip: " + ret + "(" + ret.getValue() + ")");
-                        eventLoopResponse = executeEventLoop();
-                        break;
-                    case CARDONL:
-                        ret = LibFunctions.finishOfflineProcessing(index);
-                        userInterface.logInfo("=> PW_iPPFinishChip: " + ret + "(" + ret.getValue() + ")");
-                        eventLoopResponse = executeEventLoop();
-                        break;
-                    case PPENCPIN:
-                        ret = LibFunctions.getPIN(index);
-                        userInterface.logInfo("=> PW_iPPGetPIN: " + ret + "(" + ret.getValue() + ")");
-                        eventLoopResponse = executeEventLoop();
-                }
-
-                if (eventLoopResponse == PWRet.CANCEL) {
-                    response = PWRet.CANCEL;
-                    abortPINPad = true;
-                }
-            }
-        }
-
-        if (response == PWRet.CANCEL) {
-            this.abort(abortPINPad);
-        }
-
-        return response;
-    }
-
-    /**
-     * Método responsável por lidar com um retorno inesperado da biblioteca PGWebLib (diferente de PWRet.OK)
-     */
-    private void handleUnexpectedReturnCode(PWRet returnedCode) {
-        switch (returnedCode) {
-            case REQPARAM:
-                userInterface.showException("Falha de comunicação com a infraestrutura do Pay&Go Web (falta parâmetro obrigatório).", false);
-                break;
-            case PINPADERR:
-                userInterface.showException("Erro de comunição com o PIN-pad", false);
-                break;
-            case TIMEOUT:
-                userInterface.showException("Tempo limite excedido", false);
-                break;
-            case FROMHOST:
-            default:
-                this.getResult(PWInfo.RESULTMSG);
-                userInterface.logInfo("\n\tRESPOSTA: " + getValue(true));
-        }
-    }
+    }    
 
     private PWRet executeEventLoop() {
         return EventLoop.execute(userInterface, this.displayMessage);
     }
-
+    
     private PWRet confirmTransaction() {
         Confirmation confirmation = new Confirmation(userInterface, PGWeb.confirmData);
-        PWRet ret = confirmation.executeConfirmationProcess();
+        PWRet returnedCode = confirmation.executeConfirmationProcess();
 
-        if (ret == PWRet.CANCEL) {
-            return ret;
+        if (returnedCode != PWRet.OK) {
+        	userInterface.showException("Erro no processo de confirmação: " + returnedCode, false);
         }
-
-        value = new byte[1000];
-
-        getResult(PWInfo.RESULTMSG);
-        userInterface.logInfo(PWInfo.RESULTMSG + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = " + getValue(true));
-
-        if (ret == PWRet.OK) {
-            userInterface.logInfo("Confirmação OK");
-        }
-
-        return ret;
+        else {
+        	PGWeb.confirmData.clear();        	
+        }        
+        return returnedCode;
     }
 }
