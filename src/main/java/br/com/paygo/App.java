@@ -11,7 +11,8 @@ public class App
      * cmd = CMDInterface.java
      */
     public static void main(String[] args) {
-        UserInterface userInterface = new SwingInterface();
+        //teste
+    	UserInterface userInterface = new SwingInterface();
 //        UserInterface userInterface = new CMDInterface();
     }
 }
