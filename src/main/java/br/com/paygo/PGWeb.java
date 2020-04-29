@@ -5,7 +5,6 @@ import br.com.paygo.helper.TextFormatter;
 import br.com.paygo.interop.Confirmation;
 import br.com.paygo.interop.EventLoop;
 import br.com.paygo.interop.LibFunctions;
-import br.com.paygo.interop.PWGetData;
 import br.com.paygo.interop.PWOperations;
 import br.com.paygo.interop.Transaction;
 import br.com.paygo.ui.UserInterface;
