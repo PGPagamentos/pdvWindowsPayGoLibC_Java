@@ -164,17 +164,11 @@ public class SwingInterface implements UserInterface {
                 case SALEVOID:
                     saleVoid();
                     break;
-                case PNDCNF:
-                    checkPendingConfirmation();
-                    break;
                 case RPTTRUNC:
                     reportTrunc();
                     break;
                 case RPTDETAIL:
                     reportDetail();
-                    break;
-                case SELFSERV:
-                    saleOnPINPad();
                     break;
                 default:
                     showException("Operação não encontrada!", false);
@@ -259,11 +253,6 @@ public class SwingInterface implements UserInterface {
     }
 
     @Override
-    public void saleOnPINPad() {
-        //pgWeb.saleOnPINPad();
-    }
-
-    @Override
     public void reprint() {
         pgWeb.reprint();
     }
@@ -272,12 +261,7 @@ public class SwingInterface implements UserInterface {
     public void saleVoid() {
         pgWeb.saleVoid();
     }
-
-    @Override
-    public void checkPendingConfirmation() {
-        pgWeb.checkPendingConfirmation();
-    }
-
+    
     @Override
     public void reportTrunc() {
         pgWeb.reportTrunc();

@@ -42,11 +42,6 @@ public class CMDInterface implements UserInterface {
     }
 
     @Override
-    public void saleOnPINPad() {
-        //pgWeb.saleOnPINPad();
-    }
-
-    @Override
     public void reprint() {
         pgWeb.reprint();
     }
@@ -54,11 +49,6 @@ public class CMDInterface implements UserInterface {
     @Override
     public void saleVoid() {
         pgWeb.saleVoid();
-    }
-
-    @Override
-    public void checkPendingConfirmation() {
-        pgWeb.checkPendingConfirmation();
     }
 
     @Override

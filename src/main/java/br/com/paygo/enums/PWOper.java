@@ -33,11 +33,7 @@ public enum PWOper {
     VOID(57),        // Exibe um menu com os cancelamentos disponíveis), caso só exista um tipo), este é selecionado automaticamente
     VERSION(252),    // (Versão) Permite consultar a versão da biblioteca atualmente em uso.
     CONFIG(253),     // (Configuração) Visualiza e altera os parâmetros de operação locais da biblioteca
-    MAINTENANCE(254),// (Manutenção) Apaga todas as configurações do Ponto de Captura), devendo ser novamente realizada uma transação de Instalação.
-
-    // Adicionados para exibição no menu da interface gráfica
-    PNDCNF(3),      // (Confirmação) Verifica se existe alguma transação pendente
-    SELFSERV(4);    // (Venda) Auto atendimento para realização de uma venda
+    MAINTENANCE(254);// (Manutenção) Apaga todas as configurações do Ponto de Captura), devendo ser novamente realizada uma transação de Instalação.
 
     private final int value;
 

@@ -11,10 +11,8 @@ public interface UserInterface {
     void install();
     void adm();
     void sale();
-    void saleOnPINPad();
     void reprint();
     void saleVoid();
-    void checkPendingConfirmation();
     void reportTrunc();
     void reportDetail();
     void abort();

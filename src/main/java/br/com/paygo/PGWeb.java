@@ -107,40 +107,6 @@ public class PGWeb {
 		transaction.printResultParams();
 	}
 
-	public void checkPendingConfirmation() {
-		userInterface.logInfo("\n=== CONFIRMAÇÃO ===\n");
-
-		logConfirmData();
-
-		try {
-			Confirmation confirmation = new Confirmation(userInterface, PGWeb.confirmData);
-			PWRet ret = confirmation.executeConfirmationProcess();
-			byte[] value = new byte[1000];
-
-			LibFunctions.getResult(PWInfo.RESULTMSG, value);
-			userInterface.logInfo(PWInfo.RESULTMSG + "<0X" + Integer.toHexString(PWInfo.CNFREQ.getValue()) + "> = "
-					+ TextFormatter.formatByteMessage(value));
-
-			if (ret == PWRet.OK) {
-				userInterface.logInfo("Confirmação OK");
-			}
-		} catch (Exception e) {
-			userInterface.showException(e.getMessage(), false);
-		}
-
-		userInterface.logInfo("\n=== CONFIRMAÇÃO CONCLUÍDA ===\n");
-	}
-
-	private void logConfirmData() {
-		userInterface.logInfo("\n=== PARAM CONFIRMACAO ===");
-
-		for (Map.Entry<PWInfo, String> entry : confirmData.entrySet()) {
-			userInterface.logInfo(entry.getKey() + " = " + entry.getValue());
-		}
-
-		userInterface.logInfo("=========================\n");
-	}
-
 	public void reportTrunc() {
 		this.generateReport(PWOper.RPTTRUNC);
 	}
