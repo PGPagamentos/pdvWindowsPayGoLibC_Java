@@ -471,6 +471,10 @@ public class Transaction {
      * Método responsável por cancelar uma transação em execução
      */
     public void abort(boolean isPINPad) {
+    	/* TODO: Atenção! Caso a automação encerre (apertando ESC por exemplo), na camada da UI, a transação, esse 
+    	 * método deverá ser chamado caso a biblioteca tenha solicitado alguma interação com o PIN-pad durante 
+    	 * a transação corrente. Caso a condição anterior seja verdadeira, esse método deverá ser chamado com 
+    	 * parâmetro true*/
         if (isPINPad) {
             PWRet ret = LibFunctions.abortTransaction();
             userInterface.logInfo("=> PW_iPPAbort: " + ret + "(" + ret.getValue() + ")");            
