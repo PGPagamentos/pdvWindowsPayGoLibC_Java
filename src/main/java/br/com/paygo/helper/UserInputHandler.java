@@ -38,7 +38,7 @@ public class UserInputHandler {
         Map<String, String> menuOptions = menu.build();
 
         do {
-            userInput = userInterface.requestSelection("Selecione uma opção", new ArrayList<>(menuOptions.values()));
+            userInput = userInterface.requestSelection("Selecione uma opção", new ArrayList<>(menuOptions.values()), menu.getDafaultSelection());
 
             if (userInput == -1) {
                 return "-1";

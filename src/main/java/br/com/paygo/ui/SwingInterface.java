@@ -291,7 +291,12 @@ public class SwingInterface implements UserInterface {
 
     @Override
     public int requestSelection(String title, ArrayList<String> options) {
-        RadioGroupPanel radioGroupPanel = new RadioGroupPanel(options);
+        return requestSelection(title, options, 0);
+
+    }
+    @Override
+    public int requestSelection(String title, ArrayList<String> options, int defaultSelection) {
+        RadioGroupPanel radioGroupPanel = new RadioGroupPanel(options, defaultSelection);
         int code = JOptionPane.showConfirmDialog(applicationWindow, radioGroupPanel, title, JOptionPane.DEFAULT_OPTION);
 
         if (code == JOptionPane.OK_OPTION) {
