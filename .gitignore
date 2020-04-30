@@ -35,3 +35,5 @@ hs_err*.log
 ### VS Code ###
 /.vscode/
 
+/check_.pos
+/check.pos
