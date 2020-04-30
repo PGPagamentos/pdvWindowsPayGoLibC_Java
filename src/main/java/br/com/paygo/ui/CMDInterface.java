@@ -76,7 +76,12 @@ public class CMDInterface implements UserInterface {
     }
 
     @Override
-    public int requestSelection(String title, ArrayList<String> options) {
+    public int requestSelection(String title, ArrayList<String> options){
+        return requestSelection(title, options, 0);
+    }
+    
+    @Override
+    public int requestSelection(String title, ArrayList<String> options, int defaultSelection) {
         Scanner scanner = new Scanner(System.in);
         int menuIndex = 1;
 

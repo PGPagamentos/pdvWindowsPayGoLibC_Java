@@ -18,6 +18,7 @@ public interface UserInterface {
     void abort();
     String requestParam(String title, String message, String mask);
     int requestSelection(String title, ArrayList<String> options);
+    int requestSelection(String title, ArrayList<String> options, int defaultSelection);
     void alert(String message);
     void logInfo(String message);
     void showException(String message, boolean terminateApplication);
