@@ -19,6 +19,8 @@ public class Confirmation {
 
     private LinkedHashMap<PWInfo, String> confirmationParams;
     private final UserInterface userInterface;
+	private Transaction currentTrn;
+	
     @SuppressWarnings("serial")
 	private static final List<PWInfo> requiredConfirmationParams = new LinkedList<PWInfo>() {{
         add(PWInfo.REQNUM);
@@ -36,9 +38,10 @@ public class Confirmation {
         add(PWInfo.PNDAUTHSYST);
     }};
 
-    public Confirmation(UserInterface userInterface, LinkedHashMap<PWInfo, String> confirmationParams) {
+    public Confirmation(UserInterface userInterface, LinkedHashMap<PWInfo, String> confirmationParams, Transaction currentTrn) {
         this.userInterface = userInterface;
         this.confirmationParams = confirmationParams;
+        this.currentTrn = currentTrn;
     }
 
     public PWRet executeConfirmationProcess() {
@@ -93,6 +96,19 @@ public class Confirmation {
 			}
 		}
 		/* Fim do tratamento */
+		
+		// Caso a confirmação tenha sido executada com sucesso, remove o desfazimento pendente
+        if (iRet != PWRet.OK)
+        	currentTrn.PendencyDelete();
+        // Caso ocorra alguma falha na confirmação
+        else
+        {
+            // Apaga o desfazimento
+        	currentTrn.PendencyDelete();
+
+            // Armazena o status recebido para repetição do processo antes da próxima transação
+        	currentTrn.PendencyWrite(confirmationType);
+        }
         return pwRet;
 
     }

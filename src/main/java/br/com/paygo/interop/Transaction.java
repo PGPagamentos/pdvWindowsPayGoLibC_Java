@@ -55,8 +55,14 @@ public class Transaction {
      * PW_iNewTransac da PGWebLib.
      * */
     private PWRet start() throws Exception {
+    	
+    	// Antes de iniciar uma nova transação, resolve possíveis pendência existentes
+    	PWRet ret = pendencyResolve();
+    	if(ret != PWRet.OK)
+    		return ret;
+    	
     	//Executa a função de nova transação da biblioteca de pagamento PGWebLib
-        PWRet ret = LibFunctions.newTransaction(this.operation);
+        ret = LibFunctions.newTransaction(this.operation);
 
         // Caso a chamada de inicio de nova transação deu certo, adiciona os parâmetros
         // informados antes do inicio da transação. Caso exista, por exemplo:
@@ -110,17 +116,48 @@ public class Transaction {
 			 * serão feitas nessa sessão.
 			 * */
 			do {
+				/* Desmarca o desfazimento marcado por segurança, pois a transação irá para 
+				 * controle pela biblioteca */
+                PendencyDelete();
+                
 				/* Chama o PW_iExecTransac da biblioteca de pagamento PGWebLib */
 				returnedCode = this.executeTransaction();
 				userInterface.logInfo("=> PW_iExecTransac: " + returnedCode + "(" + returnedCode.getValue() + ")");
 
+				// Marca um desfazimento por segurança, caso a automação seja fechada abruptamente
+                // durante qualquer passo abaixo, o desfazimento já estará armazenado em disco para
+                // ser executado por PendencyResolve antes da próxima transação
+                // Esse desfazimento será desmarcado em duas situações:
+                // 1-) O loop foi executado novamente e PW_iExecTransac será chamada
+                // 2-) Algum erro ocorreu durante o loop
+                // 3-) A transação foi finalizada com sucesso, nesse caso o desfazimento permanecerá
+                //     gravado até a execução da resolução de pendência da transação em 
+                //     "ConfirmUndoNormalTransaction"
+                PendencyWrite(PWCnf.REV_PWR_AUT);
+                
 				/* Verifica se precisam ser informados mais parâmetros para a transação */
 				if (returnedCode == PWRet.MOREDATA) {
 					/* Faz a captura dos dados solicitados pela PGWebLib */
 					PWRet moreDataRet = this.retrieveMoreData();
+					
+					/* Caso a operação seja cancelada manualmente, marca desfazimento */
+					if(moreDataRet == PWRet.CANCEL) {
+						// Apaga o status de desfazimento anterior por desligamento abrupto da
+                        // automação
+                        PendencyDelete();
+
+                        // Escreve o novo desfazimento a ser executado por transação abortada
+                        // pela automação durante uma captura de dados
+                        PendencyWrite(PWCnf.REV_ABORT);
+					}
 					/* Caso ocorra algum erro ou usuário cancele a captura */
-					if (moreDataRet != PWRet.OK)
+					if (moreDataRet != PWRet.OK) {
+						// Desmarca o desfazimento marcado por segurança, pois a transação não foi 
+                        // finalizada com sucesso
+                        PendencyDelete();
+                        
 						return moreDataRet;
+					}
 				}
 				/* Caso não deva ser feita nenhuma ação, chama novamente o iExecTransac */
 				else if(returnedCode == PWRet.NOTHING)
@@ -129,6 +166,10 @@ public class Transaction {
 			
 			/* Caso exista pendências */
 			if (returnedCode == PWRet.FROMHOSTPENDTRN) {
+				// Desmarca o desfazimento marcado por segurança, pois a transação não foi 
+                // finalizada com sucesso
+                PendencyDelete();
+                
 				pendingTransaction();
 				return returnedCode;
 			}
@@ -161,9 +202,64 @@ public class Transaction {
 	 * Método responsável pela verificação e execução do IdleProc
 	 * */
 	private void executeIdleProc() {
-		// TODO Auto-generated method stub
+		/*
+		 * Aqui deve ser obtido o parâmetro PWINFO_IDLEPROCTIME e verificado se o horário
+		 * retornado pela PGWebLib excede o horário atual.
+		 * Se sim, a automação deverá chamar a função PW_iIdleProc.
+		 * */
 		
 	}
+	
+	/**
+	 * Método de resolução de pendência do ponto de vista da automação, ou seja,
+	 * caso haja alguma confirmação/desfazimento armazenado pela automação, esse será
+	 * o momento que os dados serão recuperados e enviados ao servidor.
+	 * */
+	public PWRet pendencyResolve() {
+		// Nessa função é necessário implementar na automação, de acordo com o tipo de persistência
+        // de dados, a checagem se existe alguma transação necessitando de resolução de pendência
+        // e, caso positivo, obter os identificadores dela que foram persistidos anteriormente:
+        // PWINFO_REQNUM
+        // PWINFO_AUTLOCREF
+        // PWINFO_AUTEXTREF
+        // PWINFO_VIRTMERCH
+        // PWINFO_AUTHSYST
+        // Após isso, chamar a função PW_iConfirmation para resolver e:
+        //      Caso ocorra algum erro nessa chamada, não desmarcar a resolução de pendência 
+        //      em disco e retornar erro, abortando a transação em curso.
+        //      Caso a chamada retorne PWRET_OK, desmarcar a resolução de pendência em disco e
+        //      prosseguir normalmente com a transação em curso.
+		return PWRet.OK;
+	}
+	
+	// Grava uma pendência para posterior resolução
+	public int PendencyWrite(PWCnf transactionStatus)
+    {
+        // Sempre é necessário, antes de marcar este desfazimento, verificar se a transação necessita
+        // de resolução de pendência através da obtenção do dado PWINFO_CNFREQ, caso esse valor 
+        // seja "0", o tratamento abaixo nã é necessário para a transação corrente.
+
+        // Nessa função é necessário implementar na automação, de acordo com o tipo de persistência
+        // de dados, a obtenção da biblioteca dos identificadores da transação através de 
+        // PW_iGetResult e armazená-los em disco:
+        // PWINFO_REQNUM
+        // PWINFO_AUTLOCREF
+        // PWINFO_AUTEXTREF
+        // PWINFO_VIRTMERCH
+        // PWINFO_AUTHSYST
+        // Bem como o status a ser utilizado para a resolução de sua pendencia "transactionStatus"
+
+        return (int) PWRet.OK.getValue();
+    }
+
+    // Descarta uma pendência que já foi resolvida ou não é mais necessária
+	public int PendencyDelete()
+    {
+        // Nessa função é necessário implementar na automação, de acordo com o tipo de persistência
+        // de dados a exclusão de qualquer resolução de pendência que possa estar armazenada.
+
+    	return (int) PWRet.OK.getValue();
+    }
 
 	/**
      * Método responsável por tratar a captura de dados da PGWebLib 
@@ -473,7 +569,7 @@ public class Transaction {
     }
     
     private PWRet confirmTransaction() {
-        Confirmation confirmation = new Confirmation(userInterface, PGWeb.confirmData);
+        Confirmation confirmation = new Confirmation(userInterface, PGWeb.confirmData, this);
         PWRet returnedCode = confirmation.executeConfirmationProcess();
 
         if (returnedCode != PWRet.OK) {
