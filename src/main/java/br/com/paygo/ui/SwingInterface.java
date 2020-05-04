@@ -279,8 +279,21 @@ public class SwingInterface implements UserInterface {
 
     @Override
     public String requestParam(String title, String message, String mask) {
-        InputTextPanel inputPanel = new InputTextPanel(message, mask);
+        InputTextPanel inputPanel = new InputTextPanel(message, mask, "", (byte) 0);
             int code = JOptionPane.showConfirmDialog(applicationWindow, inputPanel, title, JOptionPane.OK_CANCEL_OPTION);
+
+        if (code == JOptionPane.OK_OPTION) {
+            return inputPanel.getValue();
+        } else {
+            return "-1";
+        }
+    }
+
+    @Override
+    public String requestParam(String title, String message, String mask, String initialValue,
+            byte ocultarDadosDigitados, byte iniciaPelaEsquerda, byte alinhaDireita) {
+        InputTextPanel inputPanel = new InputTextPanel(message, mask, initialValue, ocultarDadosDigitados);
+        int code = JOptionPane.showConfirmDialog(applicationWindow, inputPanel, title, JOptionPane.OK_CANCEL_OPTION);
 
         if (code == JOptionPane.OK_OPTION) {
             return inputPanel.getValue();

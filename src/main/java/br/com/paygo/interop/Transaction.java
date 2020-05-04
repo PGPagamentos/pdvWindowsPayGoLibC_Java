@@ -316,20 +316,36 @@ public class Transaction {
 				 * ulValorMinimo, ulValorMaximo e as mensagens szMsgDadoMenor e szMsgDadoMaior 
 				 * bValidacaoDado -> Caso falhe, apresentar szMsgValidacao
 				 * 
+				 * se a bValidacaoDado == 1, validar se o dado não é vazio.
+				 * se a bValidacaoDado == 2, validar se o digíto verificador é válido pelo algoritmo mod 10.
+				 * se a bValidacaoDado == 3, validar cpf ou cnpj 
+				 * se a bValidacaoDado == 4, validar se a data digitada está no formato MMAA
+				 * se a bValidacaoDado == 5, validar se a data digitada está no formato DDMMAA
 				 * Se a bValidacaoDado == 6, iniciando com szValorInicial, verificar que os dois dados são iguais
 				 * na segunda solicitação deve substituir o szPrompt por szMsgConfirmacao
 				 * 
 				 * iniciarPelaEsquerda -> Inicia preenchimento do dado pela esquerda. 
                  * alinharDireita -> Alinha o dado capturado a direita.
+				 * 
+				 * Se ulValorMinimo > 0, verificar se dado adicionado é maior do que valor mínimo.
+				 * Se ulValorMaximo > 0, verificar se dado adicionado é menor do que valor máximo. 
 				 * */
 				typedData = UserInputHandler.getTypedData(userInterface, pwGetData.getPrompt(),
 						pwGetData.getTamanhoMaximo(), pwGetData.getTamanhoMinimo(), pwGetData.getTipoEntradaPermitido(),
-						pwGetData.getValorInicial(), pwGetData.getMascaraDeCaptura());
+						pwGetData.getValorInicial(), pwGetData.getMascaraDeCaptura(), pwGetData.getValidacaoDado(),
+						pwGetData.getValorMinimo(), pwGetData.getSzMsgDadoMenor(), pwGetData.getValorMaximo(), 
+						pwGetData.getMsgDadoMaior(), pwGetData.getOcultarDadosDigitados(), pwGetData.getIniciarPelaEsquerda(), 
+						pwGetData.getAlinharDireita(), pwGetData.getMsgConfirmacao());
 
 				if (typedData.equals("-1")) {
 					response = PWRet.CANCEL;
 				} else {
-					this.addParam(identifier, typedData);
+					PWRet ret = this.addParam(identifier, typedData);
+					if (ret != PWRet.OK) {
+						/*
+						* TODO: Exibir mensagem ao usuário que houve erro ao adicionar parâmetro 
+						*/
+					}
 				}
 				break;
 			case PPREMCRD:				

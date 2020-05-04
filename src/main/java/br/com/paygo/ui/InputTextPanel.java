@@ -15,12 +15,16 @@ class InputTextPanel extends JPanel {
     };
 
     private JTextField textField;
+    private JPasswordField passwordField;
     private ABMTextField currencyField;
     private JFormattedTextField formattedTextField;
     private String mask;
+    private byte passwordCapture;
 
-    InputTextPanel(String message, String mask) {
+    InputTextPanel(String message, String mask, String initialValue, byte passwordCapture) {
         this.mask = mask;
+        this.passwordCapture = passwordCapture;
+
         setLayout(new GridLayout(2, 1, 0,2));
 
         JLabel label = new JLabel("<html>" + message.replaceAll("\n", "<br/>") + "</html>");
@@ -50,10 +54,14 @@ class InputTextPanel extends JPanel {
                     add(formattedTextField);
                 }
             } catch (Exception e) {
-                addSimpleTextField();
+                addSimpleTextField(initialValue);
             }
         } else {
-            addSimpleTextField();
+            if (passwordCapture == 0) {
+                addSimpleTextField(initialValue);
+            } else {
+                addSimplePasswordField(initialValue);
+            }
         }
     }
 
@@ -66,12 +74,26 @@ class InputTextPanel extends JPanel {
 
             return formattedTextField.getText().replaceAll("[^\\d]", "");
         }
-        return textField.getText();
+        if (passwordCapture == 0) {
+            return textField.getText();
+        }
+        else {
+            return passwordField.getText();
+        }
+
     }
 
-    private void addSimpleTextField() {
+    private void addSimpleTextField(String initialValue) {
         textField = new JTextField();
         textField.setMargin(new Insets(5, 2, 5, 2));
+        textField.setText(initialValue);
         add(textField);
+    }
+
+    private void addSimplePasswordField(String initialValue) {
+        passwordField = new JPasswordField();
+        passwordField.setMargin(new Insets(5, 2, 5, 2));
+        passwordField.setText(initialValue);
+        add(passwordField);
     }
 }

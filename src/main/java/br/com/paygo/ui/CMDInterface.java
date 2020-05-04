@@ -76,6 +76,11 @@ public class CMDInterface implements UserInterface {
     }
 
     @Override
+    public String requestParam(String title, String message, String mask, String initialValue, byte ocultarDadosDigitados, byte iniciaPelaEsquerda, byte alinhaDireita) {
+        return requestParam(title, message, mask);
+    }
+
+    @Override
     public int requestSelection(String title, ArrayList<String> options){
         return requestSelection(title, options, 0);
     }

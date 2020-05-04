@@ -45,7 +45,7 @@ public class PWGetData extends Structure {
     public byte omitirMsgAlerta;
     public byte iniciarPelaEsquerda;
     public byte notificarCancelamento;
-    public byte[] alinharDireita = new byte[1];
+    public byte alinharDireita;
 
     PWInfo getIdentificador() {
         return PWInfo.valueOf(this.identificador);
@@ -109,7 +109,7 @@ public class PWGetData extends Structure {
 
     byte getNotificarCancelamento() { return this.notificarCancelamento; }
 
-    byte[] getAlinharDireita() { return this.alinharDireita; }
+    byte getAlinharDireita() { return this.alinharDireita; }
 
     @Override
     public String toString() {
