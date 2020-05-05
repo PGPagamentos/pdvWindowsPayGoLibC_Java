@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 
 /**
@@ -38,12 +37,17 @@ public class UserInputHandler {
         return typedData;
     }
 
-    public static String requestSelectionFromMenu(UserInterface userInterface, Menu menu) {
+    public static String requestSelectionFromMenu(UserInterface userInterface, Menu menu, String promptMessage) {
         int userInput;
         Map<String, String> menuOptions = menu.build();
+        String message = promptMessage ;
+        if (message.compareTo("") == 0) {
+            message = "Selecione uma opção";
+        }
+
 
         do {
-            userInput = userInterface.requestSelection("Selecione uma opção", new ArrayList<>(menuOptions.values()), menu.getDafaultSelection());
+            userInput = userInterface.requestSelection(message, new ArrayList<>(menuOptions.values()), menu.getDafaultSelection());
 
             if (userInput == -1) {
                 return "-1";
@@ -318,7 +322,6 @@ public class UserInputHandler {
         if (Integer.toString(dv).compareTo(data.substring(data.length() -1)) == 0) {
             return true;
         }
-
         return false;
     }
 }

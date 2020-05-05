@@ -289,7 +289,7 @@ public class Transaction {
 				 * bTeclasDeAtalho -> Caso esteja sinalizado, o menu deverá suportar Hotkeys (atalhos)
 				 * bItemInicial -> Opção inicial no menu que deve ser destacada.
 				*/
-				optionSelected = UserInputHandler.requestSelectionFromMenu(userInterface, menu);
+				optionSelected = UserInputHandler.requestSelectionFromMenu(userInterface, menu, pwGetData.getPrompt());
 
 				if (optionSelected.equals("-1")) {
 					response = PWRet.CANCEL;
@@ -309,7 +309,6 @@ public class Transaction {
 				String typedData;
 				
 				/*
-				 * TODO: Os seguintes parâmetros devem ser considerados:
 				 * bOcultarDadosDigitados -> Dados devem ser exibidos mascarados.
 				 * 
 				 * # Caso o tipo de entrada for numérico:
@@ -342,9 +341,7 @@ public class Transaction {
 				} else {
 					PWRet ret = this.addParam(identifier, typedData);
 					if (ret != PWRet.OK) {
-						/*
-						* TODO: Exibir mensagem ao usuário que houve erro ao adicionar parâmetro 
-						*/
+						userInterface.alert("Erro (" + ret + ") ao adicionar parâmetro (" + identifier + ")");
 					}
 				}
 				break;
