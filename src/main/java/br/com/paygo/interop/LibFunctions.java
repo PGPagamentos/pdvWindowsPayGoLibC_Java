@@ -89,6 +89,14 @@ public class LibFunctions {
     static PWRet abortTransaction() {
         return PWRet.valueOf(pgWebLib.PINPadAbort());
     }
+    
+    /**
+     * Esta função pode ser utilizada pela Automação para interromper uma captura de dados no PIN-pad
+     * em curso, e retorna imediatamente.
+     */
+    public static PWRet pwGetOperations(byte value, PWOperations[] pwOpers, ShortByReference numParams) {
+    	return PWRet.valueOf(pgWebLib.getOperations(value, pwOpers, numParams));
+    }
 
     /**
      * Esta função é utilizada para realizar a leitura de um cartão (magnético, com chip com contato,
@@ -139,15 +147,31 @@ public class LibFunctions {
     /**
      * Esta função é utilizada para apresentar uma mensagem no PIN-pad.
      */
-    static PWRet showMessageOnPINPad(String message) {
+    public static PWRet showMessageOnPINPad(String message) {
         return PWRet.valueOf(pgWebLib.PINPadShowMessage(message));
     }
 
     /**
      * Esta função é utilizada para aguardar a ocorrência de um evento no PIN-pad.
      */
-    static PWRet waitEventOnPINPad(LongByReference event) {
+    public static PWRet waitEventOnPINPad(LongByReference event) {
         return PWRet.valueOf(pgWebLib.PINPadWaitEvent(event));
+    }
+    
+    static PWRet ppConfirmationData(short index) {
+    	return PWRet.valueOf(pgWebLib.PINPadRequestConfirmation(index));
+    }
+    
+    static PWRet ppPositiveConfirmation (short index) {
+    	return PWRet.valueOf(pgWebLib.PINPadPositiveConfirmation(index));
+    }
+    
+    static PWRet ppGetData (short index) {
+    	return PWRet.valueOf(pgWebLib.PINPadGetData(index));
+    }
+    
+    static PWRet ppGenericCommand (short index) {
+    	return PWRet.valueOf(pgWebLib.PINPadGenericCommand(index));
     }
 
 }

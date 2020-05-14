@@ -8,10 +8,12 @@ public class Menu {
 
     private final PWGetData getData;
     private final int size;
+    private final int defaultSelection;
 
     Menu(PWGetData getData) {
         this.getData = getData;
         this.size = getData.getNumOpcoesMenu();
+        this.defaultSelection = getData.itemInicial;
     }
 
     public Map<String, String> build() {
@@ -32,5 +34,9 @@ public class Menu {
 
     public int getSize() {
         return size;
+    }
+
+    public int getDafaultSelection() {
+        return defaultSelection;
     }
 }

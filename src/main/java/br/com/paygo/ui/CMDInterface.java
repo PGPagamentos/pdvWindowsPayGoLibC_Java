@@ -42,11 +42,6 @@ public class CMDInterface implements UserInterface {
     }
 
     @Override
-    public void saleOnPINPad() {
-        pgWeb.saleOnPINPad();
-    }
-
-    @Override
     public void reprint() {
         pgWeb.reprint();
     }
@@ -54,11 +49,6 @@ public class CMDInterface implements UserInterface {
     @Override
     public void saleVoid() {
         pgWeb.saleVoid();
-    }
-
-    @Override
-    public void checkPendingConfirmation() {
-        pgWeb.checkPendingConfirmation();
     }
 
     @Override
@@ -86,7 +76,17 @@ public class CMDInterface implements UserInterface {
     }
 
     @Override
-    public int requestSelection(String title, ArrayList<String> options) {
+    public String requestParam(String title, String message, String mask, String initialValue, byte ocultarDadosDigitados, byte iniciaPelaEsquerda, byte alinhaDireita) {
+        return requestParam(title, message, mask);
+    }
+
+    @Override
+    public int requestSelection(String title, ArrayList<String> options){
+        return requestSelection(title, options, 0);
+    }
+    
+    @Override
+    public int requestSelection(String title, ArrayList<String> options, int defaultSelection) {
         Scanner scanner = new Scanner(System.in);
         int menuIndex = 1;
 

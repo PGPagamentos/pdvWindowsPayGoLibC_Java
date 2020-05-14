@@ -8,7 +8,7 @@ class RadioGroupPanel extends JPanel {
 
     private ButtonGroup buttonGroup;
 
-    RadioGroupPanel(ArrayList<String> options) {
+    RadioGroupPanel(ArrayList<String> options, int default_selection) {
         this.setLayout(new GridLayout(0, 1));
         buttonGroup = new ButtonGroup();
         int index = 0;
@@ -16,7 +16,7 @@ class RadioGroupPanel extends JPanel {
         for (String option : options) {
             JRadioButton radioButton = new JRadioButton(option);
             radioButton.setActionCommand(String.valueOf(index));
-            radioButton.setSelected(index == 0);
+            radioButton.setSelected(index == default_selection);
 
             index++;
 

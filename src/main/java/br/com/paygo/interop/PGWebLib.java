@@ -52,6 +52,10 @@ public class PGWebLib {
     short idleProd() {
         return libInterface.PW_iIdleProc();
     }
+    
+    short getOperations(byte value, PWOperations[] pwOpers, ShortByReference numParams) {
+    	return libInterface.PW_iGetOperations(value, pwOpers, numParams);
+    }
 
     short PINPadEventLoop(byte[] displayMessage, int displaySize) {
         return libInterface.PW_iPPEventLoop(displayMessage, displaySize);
@@ -110,5 +114,11 @@ public class PGWebLib {
         return libInterface.PW_iPPDisplay(message);
     }
 
-    short PINPadWaitEvent(LongByReference event) { return  libInterface. PW_iPPWaitEvent(event); }
+    short PINPadWaitEvent(LongByReference event) { 
+    	return libInterface.PW_iPPWaitEvent(event); 
+    }
+    
+    short PINPadPositiveConfirmation(short index) {
+    	return libInterface.PW_iPPPositiveConfirmation(index);
+    }
 }
