@@ -37,7 +37,29 @@ Além disso, a aplicação permite simular a solicitação de informações espe
 ![Interface gráfica](ui.png)
 
 ---
+## Gerando a aplicação java(.jar)
 
+O arquivo JAR(Java ARchive) da aplicação PayGo Java contém todos os diretórios e classes compactadas em um único arquivo, facilitando a execução e distribuição da aplicação.
+**Obs:** Lembrando que a aplicação PayGo Java é um *Maven Project*.
+Exemplos de como gerar o .jar:
+
+### Linha de comando
+**Comando:** *mvn package*
+Podemos verificar que o arquivo *paygo-java-1.0-SNAPSHOT.jar* foi criado no diretório *target* do projeto.
+A aplicação pode ser executada com um duplo clique no .jar ou via linha de comando.
+**Comando:** *java -jar paygo-java-1.0-SNAPSHOT.jar*
+
+### IntelliJ IDEA
+Pressione **Ctrl+Shift+A**, pesquise e selecione **Edit Configurations**. Irá aparecer uma nova tela **Run/Debug Configurations**, no canto superior esquerdo tem um **+**, clique nele e selecione *Maven*.
+Repare que surgiu alguns campos para serem preenchidos:
+* __Name:__ nome da nova configuração.
+* __Working directory:__ caminho do projeto.
+* __Command line:__ comando que queremos executar.
+
+No campo *Command line* digite *package* e clique em **OK**. Pressione **Shift+F10** para executar a nova configuração.
+Podemos verificar que o arquivo *paygo-java-1.0-SNAPSHOT.jar* foi criado no diretório *target* do projeto.
+
+---
 ## Mais informações
 
 - [Site Pay&Go](https://www.paygo.com.br)
